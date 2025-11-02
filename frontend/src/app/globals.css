@@ -1,26 +1,90 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Custom brand colors */
+  --color-ivory: 242 243 241;
+  --color-blush: 220 207 191;
+  --color-sage: 161 166 159;
+  --color-terracotta: 179 123 100;
+  --color-evergreen: 102 117 108;
+
+  /* Semantic colors using brand palette */
+  --background: 242 243 241; /* ivory */
+  --foreground: 102 117 108; /* evergreen */
+
+  /* Component colors */
+  --primary: 161 166 159; /* sage */
+  --primary-foreground: 242 243 241; /* ivory */
+
+  --secondary: 220 207 191; /* blush */
+  --secondary-foreground: 102 117 108; /* evergreen */
+
+  --muted: 220 207 191; /* blush */
+  --muted-foreground: 102 117 108; /* evergreen */
+
+  --accent: 179 123 100; /* terracotta */
+  --accent-foreground: 242 243 241; /* ivory */
+
+  --destructive: 220 38 38;
+  --destructive-foreground: 250 250 250;
+
+  --border: 220 207 191; /* blush */
+  --input: 220 207 191; /* blush */
+  --ring: 161 166 159; /* sage */
+
+  --radius: 0.75rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* Force light mode for our color scheme */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 242 243 241; /* Keep ivory background even in dark mode */
+    --foreground: 102 117 108; /* Keep evergreen text */
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Ensure text is visible */
+* {
+  border-color: rgb(var(--border));
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar for horizontal scroll containers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

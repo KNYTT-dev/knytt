@@ -1,0 +1,78 @@
+"use client";
+
+import { useState, FormEvent } from "react";
+import { Search, X } from "lucide-react";
+
+interface SearchBarProps {
+  onSearch: (query: string) => void;
+  placeholder?: string;
+  className?: string;
+  isLoading?: boolean;
+}
+
+export function SearchBar({
+  onSearch,
+  placeholder = "Search for products...",
+  className = "",
+  isLoading = false,
+}: SearchBarProps) {
+  const [query, setQuery] = useState("");
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (query.trim()) {
+      onSearch(query.trim());
+    }
+  };
+
+  const handleClear = () => {
+    setQuery("");
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className={`relative ${className}`}>
+      <div className="relative flex items-center">
+        {/* Search Icon */}
+        <div className="absolute left-4 text-muted-foreground">
+          <Search className="h-5 w-5" />
+        </div>
+
+        {/* Input Field */}
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={placeholder}
+          disabled={isLoading}
+          className={`
+            w-full pl-12 pr-12 py-3
+            text-base
+            bg-background
+            border border-input
+            rounded-lg
+            focus:outline-none focus:ring-2 focus:ring-ring
+            disabled:opacity-50 disabled:cursor-not-allowed
+            transition-all
+          `}
+        />
+
+        {/* Clear Button */}
+        {query && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-4 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Clear search"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      {/* Submit Button - Hidden but functional for Enter key */}
+      <button type="submit" className="sr-only">
+        Search
+      </button>
+    </form>
+  );
+}

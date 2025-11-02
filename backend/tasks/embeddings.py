@@ -38,7 +38,7 @@ def generate_product_embeddings(
     Returns:
         Dictionary with generation results
     """
-    from sqlalchemy import select, and_
+    from sqlalchemy import select, and_, func
     from sqlalchemy.dialects.postgresql import insert
     from uuid import UUID
 
@@ -147,8 +147,7 @@ def generate_product_embeddings(
                                 index_elements=['product_id', 'embedding_type'],
                                 set_={
                                     'embedding': embedding.tolist(),
-                                    'model_version': 'ViT-B-32',
-                                    'updated_at': db.func.now()
+                                    'model_version': 'ViT-B-32'
                                 }
                             )
                             db.execute(stmt)
@@ -156,16 +155,17 @@ def generate_product_embeddings(
                             # Also update denormalized column on Product table for fast access
                             product.text_embedding = embedding.tolist()
 
+                            # Commit each product immediately to avoid transaction abort issues
+                            db.commit()
                             successful += 1
 
                         except Exception as e:
+                            # Rollback this specific product's transaction
+                            db.rollback()
                             failed += 1
                             error_msg = f"Product {product.id}: {str(e)}"
                             error_details.append(error_msg)
                             logger.error(error_msg)
-
-                    # Commit batch
-                    db.commit()
                     logger.info(f"Batch {batch_num} complete ({successful}/{total} processed)")
 
                 except Exception as e:

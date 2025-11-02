@@ -168,9 +168,7 @@ class MetadataService:
                     colour,
                     fashion_category,
                     fashion_size,
-                    quality_score,
-                    average_rating,
-                    reviews
+                    quality_score
                 FROM products
                 WHERE id::text = ANY(:product_ids)
                     AND is_active = true
@@ -205,8 +203,8 @@ class MetadataService:
                         "fashion_category": row.fashion_category,
                         "fashion_size": row.fashion_size,
                         "quality_score": row.quality_score,
-                        "rating": float(row.average_rating) if row.average_rating else None,
-                        "review_count": row.reviews,
+                        "rating": None,
+                        "review_count": None,
                     }
 
                     products_data[product_id] = product_data

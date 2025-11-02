@@ -6,6 +6,9 @@
 import { InteractionType, RecommendationContext, HealthStatus } from "./enums";
 import { ProductResult, FilterParams } from "./product";
 
+// Re-export product types for convenience
+export type { ProductResult, FilterParams };
+
 // ============================================================================
 // SEARCH ENDPOINT: POST /api/v1/search
 // ============================================================================
