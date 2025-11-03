@@ -12,7 +12,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from .config import get_settings
 from .errors import setup_error_handlers
 from .middleware import RequestLoggingMiddleware, RequestTimingMiddleware
-from .routers import health_router, search_router, recommend_router, feedback_router, admin_router
+from .routers import health_router, search_router, recommend_router, feedback_router, admin_router, auth_router, users_router
 from ..ml.retrieval import get_index_manager
 
 # Configure logging
@@ -99,6 +99,8 @@ def create_app() -> FastAPI:
 
     # Include routers
     app.include_router(health_router)
+    app.include_router(auth_router)  # Auth router (for /api/v1/auth endpoints)
+    app.include_router(users_router)  # User endpoints (favorites, history, stats)
     app.include_router(search_router)
     app.include_router(recommend_router)
     app.include_router(feedback_router)

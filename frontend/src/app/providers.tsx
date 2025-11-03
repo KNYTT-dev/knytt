@@ -9,6 +9,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
 import { queryClient } from "@/lib/query-client";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ interface ProvidersProps {
 
 /**
  * Providers component that wraps the entire application.
- * Includes React Query with DevTools in development.
+ * Includes React Query with DevTools in development and AuthProvider.
  *
  * @param props - Component props
  * @returns Wrapped children with providers
@@ -28,14 +29,16 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <QueryClientProvider client={client}>
-      {children}
-      {/* DevTools only in development */}
-      {process.env.NODE_ENV === "development" && (
-        <ReactQueryDevtools
-          initialIsOpen={false}
-          buttonPosition="bottom-left"
-        />
-      )}
+      <AuthProvider>
+        {children}
+        {/* DevTools only in development */}
+        {process.env.NODE_ENV === "development" && (
+          <ReactQueryDevtools
+            initialIsOpen={false}
+            buttonPosition="bottom-left"
+          />
+        )}
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -9,10 +9,10 @@ import Link from "next/link";
 
 interface MasonryGridProps {
   products: ProductResult[];
-  userId?: number;
+  userId?: string;
 }
 
-export function MasonryGrid({ products, userId = 1 }: MasonryGridProps) {
+export function MasonryGrid({ products, userId }: MasonryGridProps) {
   const [columns, setColumns] = useState(4);
   const feedbackMutation = useTrackInteraction();
 
@@ -38,6 +38,7 @@ export function MasonryGrid({ products, userId = 1 }: MasonryGridProps) {
   const handleLike = (productId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!userId) return; // Skip if not authenticated
     feedbackMutation.mutate({
       user_id: userId,
       product_id: productId,
@@ -48,6 +49,7 @@ export function MasonryGrid({ products, userId = 1 }: MasonryGridProps) {
   const handleAddToCart = (productId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!userId) return; // Skip if not authenticated
     feedbackMutation.mutate({
       user_id: userId,
       product_id: productId,
@@ -56,6 +58,7 @@ export function MasonryGrid({ products, userId = 1 }: MasonryGridProps) {
   };
 
   const handleClick = (productId: string) => {
+    if (!userId) return; // Skip if not authenticated
     feedbackMutation.mutate({
       user_id: userId,
       product_id: productId,

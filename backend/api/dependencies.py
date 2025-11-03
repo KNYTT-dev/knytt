@@ -5,12 +5,15 @@ FastAPI dependencies for database, services, and configurations.
 
 import logging
 from typing import Generator, Optional
-from fastapi import Depends, Header, HTTPException, status
+from uuid import UUID
+from fastapi import Depends, Header, HTTPException, status, Cookie
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from .config import get_settings, APISettings
+from .security import verify_token
+from ..db.models import User
 from ..ml.search import SearchService
 from ..ml.retrieval import get_index_manager
 from ..ml.caching import EmbeddingCache
@@ -178,3 +181,96 @@ def get_request_id(
     # Generate UUID if not provided
     import uuid
     return str(uuid.uuid4())
+
+
+def get_current_user(
+    access_token: Optional[str] = Cookie(None),
+    db: Session = Depends(get_db)
+) -> User:
+    """
+    Get current authenticated user from JWT token in cookie.
+
+    Use as FastAPI dependency to protect routes:
+        @app.get("/endpoint")
+        def endpoint(current_user: User = Depends(get_current_user)):
+            ...
+
+    Raises:
+        HTTPException: 401 if not authenticated or token invalid
+    """
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Verify and decode token
+    payload = verify_token(access_token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Extract user ID from token
+    user_id_str = payload.get("sub")
+    if not user_id_str:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        )
+
+    try:
+        user_id = UUID(user_id_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user ID in token",
+        )
+
+    # Get user from database
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is disabled",
+        )
+
+    return user
+
+
+def get_current_user_optional(
+    access_token: Optional[str] = Cookie(None),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """
+    Get current authenticated user, but don't raise error if not authenticated.
+    Returns None if no valid token.
+
+    Use for endpoints that work for both authenticated and anonymous users.
+    """
+    if not access_token:
+        return None
+
+    try:
+        payload = verify_token(access_token)
+        if not payload:
+            return None
+
+        user_id_str = payload.get("sub")
+        if not user_id_str:
+            return None
+
+        user_id = UUID(user_id_str)
+        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+        return user
+    except Exception:
+        return None

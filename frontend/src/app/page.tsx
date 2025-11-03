@@ -1,10 +1,27 @@
 "use client";
 
 import { HeroSection, CategoryPills, MasonryGrid } from "@/components/home";
+import { RecommendationCarousel } from "@/components/recommendations/RecommendationCarousel";
 import { useSearch } from "@/lib/queries/search";
-import { Loader2 } from "lucide-react";
+import { useFeed } from "@/lib/queries/recommendations";
+import { useAuth } from "@/lib/queries/auth";
+import { Loader2, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 export default function HomePage() {
+  const { user, isAuthenticated } = useAuth();
+
+  // Fetch personalized recommendations for authenticated users
+  const { data: recommendedData, isLoading: recommendationsLoading } = useFeed(
+    user?.id ? parseInt(user.id.toString()) : undefined,
+    {
+      limit: 12,
+      use_session_context: true,
+      enable_diversity: true,
+      enabled: isAuthenticated && !!user?.id,
+    }
+  );
+
   // Fetch featured products using a general query
   // Note: Backend requires non-empty query, so we use a broad search term
   const { data, isLoading } = useSearch(
@@ -24,6 +41,45 @@ export default function HomePage() {
 
       {/* Category Navigation */}
       <CategoryPills />
+
+      {/* Personalized Recommendations (Authenticated Users Only) */}
+      {isAuthenticated && (
+        <section className="py-8 bg-gradient-to-b from-white to-ivory">
+          <div className="container mx-auto px-4">
+            {recommendationsLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="w-8 h-8 text-sage animate-spin" />
+              </div>
+            ) : (
+              recommendedData &&
+              recommendedData.results.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <Sparkles className="w-6 h-6 text-sage" />
+                      <h2 className="text-2xl font-bold text-evergreen">
+                        Recommended For You
+                      </h2>
+                    </div>
+                    <Link
+                      href="/feed"
+                      className="text-sage hover:text-evergreen transition-colors font-medium"
+                    >
+                      See All →
+                    </Link>
+                  </div>
+                  <RecommendationCarousel
+                    title=""
+                    products={recommendedData.results}
+                    userId={user?.id.toString()}
+                    context="homepage_recommendations"
+                  />
+                </div>
+              )
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Main Content */}
       <section className="py-12 bg-ivory">
@@ -50,7 +106,7 @@ export default function HomePage() {
 
           {/* Products Masonry Grid */}
           {data && data.results.length > 0 && (
-            <MasonryGrid products={data.results} userId={1} />
+            <MasonryGrid products={data.results} userId={user?.id} />
           )}
 
           {/* Empty State */}

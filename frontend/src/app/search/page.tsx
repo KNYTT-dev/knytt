@@ -4,10 +4,12 @@ import { useState } from "react";
 import { SearchBar } from "@/components/search";
 import { ProductGrid } from "@/components/products";
 import { useSearch } from "@/lib/queries/search";
+import { useAuth } from "@/lib/queries/auth";
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+  const { user } = useAuth();
 
   // Use the search hook - it will only run when searchQuery is not empty
   const { data, isLoading, error } = useSearch(
@@ -90,11 +92,10 @@ export default function SearchPage() {
 
             <ProductGrid
               products={data.results}
-              userId={1} // TODO: Replace with actual user ID from auth
+              userId={user?.id}
               columns={4}
               onProductClick={(productId) => {
                 console.log("Product clicked:", productId);
-                // TODO: Navigate to product detail page
               }}
             />
           </div>

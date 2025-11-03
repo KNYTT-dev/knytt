@@ -39,7 +39,18 @@ class User(Base):
     id = Column(PGUUID(as_uuid=True), primary_key=True, server_default=text('uuid_generate_v4()'))
     external_id = Column(String(255), unique=True, index=True, nullable=True,
                         comment='External user ID from client system')
-    email = Column(String(255), index=True, nullable=True)
+    email = Column(String(255), unique=True, index=True, nullable=False,
+                  comment='User email address (required for authentication)')
+
+    # Authentication fields
+    password_hash = Column(String(255), nullable=False,
+                          comment='Bcrypt hashed password')
+    is_active = Column(Boolean, nullable=False, server_default='true',
+                      comment='Whether user account is active')
+    email_verified = Column(Boolean, nullable=False, server_default='false',
+                           comment='Whether email has been verified')
+    last_login = Column(TIMESTAMP, nullable=True,
+                       comment='Timestamp of last successful login')
 
     # Timestamps
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
@@ -320,3 +331,102 @@ class ProductEmbedding(Base):
 
     def __repr__(self):
         return f"<ProductEmbedding(id={self.id}, product_id={self.product_id}, type={self.embedding_type})>"
+
+
+class TaskExecution(Base):
+    """
+    Task execution tracking model.
+
+    Tracks Celery task executions for monitoring and auditing.
+    Stores task metadata, progress, results, and errors.
+    """
+    __tablename__ = 'task_executions'
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, server_default=text('uuid_generate_v4()'))
+    task_id = Column(String(255), unique=True, index=True, nullable=False,
+                    comment='Celery task ID (UUID)')
+    task_name = Column(String(255), nullable=False, index=True,
+                      comment='Task function name (e.g., tasks.generate_product_embeddings)')
+    task_type = Column(String(100), nullable=False, index=True,
+                      comment='Task category: embedding, ingestion, maintenance')
+
+    # Status tracking
+    status = Column(String(50), nullable=False, index=True, server_default='PENDING',
+                   comment='Task status: PENDING, STARTED, PROGRESS, SUCCESS, FAILURE, REVOKED, RETRY')
+    progress_percent = Column(Integer, nullable=True,
+                             comment='Task progress percentage (0-100)')
+    progress_current = Column(Integer, nullable=True,
+                             comment='Current item being processed')
+    progress_total = Column(Integer, nullable=True,
+                           comment='Total items to process')
+    progress_message = Column(Text, nullable=True,
+                             comment='Human-readable progress message')
+
+    # Task metadata
+    args = Column(JSONB, nullable=True,
+                 comment='Task positional arguments')
+    kwargs = Column(JSONB, nullable=True,
+                   comment='Task keyword arguments')
+    metadata = Column(JSONB, nullable=True,
+                     comment='Additional task metadata')
+
+    # Execution details
+    worker_name = Column(String(255), nullable=True,
+                        comment='Celery worker that executed the task')
+    queue_name = Column(String(100), nullable=True,
+                       comment='Queue the task was sent to')
+    retries = Column(Integer, nullable=False, server_default='0',
+                    comment='Number of retry attempts')
+    max_retries = Column(Integer, nullable=True,
+                        comment='Maximum number of retries allowed')
+
+    # Timing
+    created_at = Column(TIMESTAMP, nullable=False, server_default=func.now(),
+                       comment='When task was created/dispatched')
+    started_at = Column(TIMESTAMP, nullable=True,
+                       comment='When task started executing')
+    completed_at = Column(TIMESTAMP, nullable=True,
+                         comment='When task finished (success or failure)')
+
+    # Results and errors
+    result = Column(JSONB, nullable=True,
+                   comment='Task result data')
+    error = Column(Text, nullable=True,
+                  comment='Error message if task failed')
+    traceback = Column(Text, nullable=True,
+                      comment='Full error traceback')
+
+    # User association (optional, for user-triggered tasks)
+    user_id = Column(PGUUID(as_uuid=True), ForeignKey('users.id', ondelete='SET NULL'),
+                    nullable=True, index=True,
+                    comment='User who triggered the task (if applicable)')
+
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id])
+
+    # Indexes for common queries
+    __table_args__ = (
+        Index('idx_task_executions_status_created', 'status', 'created_at'),
+        Index('idx_task_executions_type_status', 'task_type', 'status'),
+        Index('idx_task_executions_name_created', 'task_name', 'created_at'),
+    )
+
+    def __repr__(self):
+        return f"<TaskExecution(id={self.id}, task_id={self.task_id}, status={self.status})>"
+
+    @property
+    def duration_seconds(self) -> Optional[float]:
+        """Calculate task duration in seconds."""
+        if self.started_at and self.completed_at:
+            return (self.completed_at - self.started_at).total_seconds()
+        return None
+
+    @property
+    def is_finished(self) -> bool:
+        """Check if task has finished (success, failure, or revoked)."""
+        return self.status in ('SUCCESS', 'FAILURE', 'REVOKED')
+
+    @property
+    def is_active(self) -> bool:
+        """Check if task is currently active (started or in progress)."""
+        return self.status in ('STARTED', 'PROGRESS')

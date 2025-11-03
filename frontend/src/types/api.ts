@@ -262,3 +262,82 @@ export interface OnboardingResponse {
   selected_products: number;
   message: string;
 }
+
+// ============================================================================
+// USER ENDPOINTS: /api/v1/users/*
+// ============================================================================
+
+/**
+ * User preferences update request.
+ */
+export interface UserPreferencesUpdate {
+  preferred_categories?: string[];
+  price_band_min?: number;
+  price_band_max?: number;
+  style_preferences?: Record<string, any>;
+  brand_affinities?: Record<string, number>;
+}
+
+/**
+ * User statistics response.
+ */
+export interface UserStatsResponse {
+  total_interactions: number;
+  total_views: number;
+  total_clicks: number;
+  total_likes: number;
+  total_cart_adds: number;
+  total_purchases: number;
+  favorite_categories: Array<{ category: string; count: number }>;
+  favorite_brands: Array<{ brand: string; count: number }>;
+  avg_price_point: number | null;
+  account_age_days: number;
+  last_active: string | null; // ISO 8601 timestamp
+}
+
+/**
+ * Single interaction history item.
+ */
+export interface InteractionHistoryItem {
+  interaction_id: number;
+  product_id: string;
+  product_title: string | null;
+  product_image_url: string | null;
+  product_price: number | null;
+  interaction_type: string;
+  created_at: string; // ISO 8601 timestamp
+  context: string | null;
+  query: string | null;
+}
+
+/**
+ * Interaction history response.
+ */
+export interface InteractionHistoryResponse {
+  interactions: InteractionHistoryItem[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
+/**
+ * Favorite product with metadata.
+ */
+export interface FavoriteProduct {
+  product_id: string;
+  title: string;
+  price: number;
+  currency: string;
+  image_url: string | null;
+  brand: string | null;
+  in_stock: boolean;
+  liked_at: string; // ISO 8601 timestamp
+}
+
+/**
+ * Favorites response.
+ */
+export interface FavoritesResponse {
+  favorites: FavoriteProduct[];
+  total: number;
+}
