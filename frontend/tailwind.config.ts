@@ -41,12 +41,19 @@ const config: Config = {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
-        // Custom brand colors
-        ivory: "#F2F3F1",
-        blush: "#DCCFBF",
-        sage: "#A1A69F",
-        terracotta: "#B37B64",
-        evergreen: "#66756C",
+        // Custom brand colors - Pinterest-inspired
+        ivory: "rgb(var(--color-ivory))",
+        "light-gray": "rgb(var(--color-light-gray))",
+        gray: "rgb(var(--color-gray))",
+        "pinterest-red": "rgb(var(--color-pinterest-red))",
+        "dark-red": "rgb(var(--color-dark-red))",
+        charcoal: "rgb(var(--color-charcoal))",
+
+        // Legacy color names for backwards compatibility
+        blush: "rgb(var(--color-light-gray))",
+        sage: "rgb(var(--color-gray))",
+        terracotta: "rgb(var(--color-pinterest-red))",
+        evergreen: "rgb(var(--color-charcoal))",
       },
       borderRadius: {
         lg: "var(--radius)",

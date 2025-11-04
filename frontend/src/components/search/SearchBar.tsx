@@ -46,11 +46,11 @@ export function SearchBar({
           disabled={isLoading}
           className={`
             w-full pl-12 pr-12 py-3
-            text-base
-            bg-background
-            border border-input
+            text-base text-charcoal
+            bg-white
+            border-2 border-light-gray
             rounded-lg
-            focus:outline-none focus:ring-2 focus:ring-ring
+            focus:outline-none focus:ring-4 focus:ring-pinterest-red/20 focus:border-pinterest-red
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-all
           `}

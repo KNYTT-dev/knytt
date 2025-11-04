@@ -10,6 +10,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
 import { queryClient } from "@/lib/query-client";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { ToastProvider } from "@/components/ui/Toast";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -30,14 +31,16 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={client}>
       <AuthProvider>
-        {children}
-        {/* DevTools only in development */}
-        {process.env.NODE_ENV === "development" && (
-          <ReactQueryDevtools
-            initialIsOpen={false}
-            buttonPosition="bottom-left"
-          />
-        )}
+        <ToastProvider>
+          {children}
+          {/* DevTools only in development */}
+          {process.env.NODE_ENV === "development" && (
+            <ReactQueryDevtools
+              initialIsOpen={false}
+              buttonPosition="bottom-left"
+            />
+          )}
+        </ToastProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

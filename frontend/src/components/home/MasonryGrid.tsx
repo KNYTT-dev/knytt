@@ -9,7 +9,7 @@ import Link from "next/link";
 
 interface MasonryGridProps {
   products: ProductResult[];
-  userId?: string;
+  userId?: number;
 }
 
 export function MasonryGrid({ products, userId }: MasonryGridProps) {

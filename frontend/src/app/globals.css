@@ -1,38 +1,107 @@
 @import "tailwindcss";
+@config "../../tailwind.config.ts";
 
 :root {
-  /* Custom brand colors */
-  --color-ivory: 242 243 241;
-  --color-blush: 220 207 191;
-  --color-sage: 161 166 159;
-  --color-terracotta: 179 123 100;
-  --color-evergreen: 102 117 108;
+  /* Custom brand colors - Pinterest-inspired palette */
+  --color-ivory: 255 255 255;        /* Pure white background */
+  --color-light-gray: 239 239 239;   /* Light gray for subtle backgrounds */
+  --color-gray: 118 118 118;         /* Medium gray for secondary text */
+  --color-pinterest-red: 230 0 35;   /* #E60023 - Main brand color */
+  --color-dark-red: 204 0 31;        /* Darker red for hover states */
+  --color-charcoal: 51 51 51;        /* Dark charcoal for text */
 
-  /* Semantic colors using brand palette */
-  --background: 242 243 241; /* ivory */
-  --foreground: 102 117 108; /* evergreen */
+  /* Semantic colors using Pinterest palette */
+  --background: 255 255 255;         /* ivory - clean white */
+  --foreground: 51 51 51;            /* charcoal - readable dark text */
 
   /* Component colors */
-  --primary: 161 166 159; /* sage */
-  --primary-foreground: 242 243 241; /* ivory */
+  --primary: 230 0 35;               /* Pinterest red - primary actions */
+  --primary-foreground: 255 255 255; /* white text on red */
 
-  --secondary: 220 207 191; /* blush */
-  --secondary-foreground: 102 117 108; /* evergreen */
+  --secondary: 239 239 239;          /* light gray - subtle backgrounds */
+  --secondary-foreground: 51 51 51;  /* charcoal text */
 
-  --muted: 220 207 191; /* blush */
-  --muted-foreground: 102 117 108; /* evergreen */
+  --muted: 239 239 239;              /* light gray */
+  --muted-foreground: 118 118 118;   /* medium gray */
 
-  --accent: 179 123 100; /* terracotta */
-  --accent-foreground: 242 243 241; /* ivory */
+  --accent: 230 0 35;                /* Pinterest red - same as primary */
+  --accent-foreground: 255 255 255;  /* white */
 
   --destructive: 220 38 38;
   --destructive-foreground: 250 250 250;
 
-  --border: 220 207 191; /* blush */
-  --input: 220 207 191; /* blush */
-  --ring: 161 166 159; /* sage */
+  --border: 239 239 239;             /* light gray borders */
+  --input: 239 239 239;              /* light gray input backgrounds */
+  --ring: 230 0 35;                  /* Pinterest red focus rings */
 
   --radius: 0.75rem;
+
+  /* Spacing scale (8px grid system) */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+
+  /* Typography scale */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-4xl: 2.25rem;    /* 36px */
+  --text-5xl: 3rem;       /* 48px */
+
+  /* Line heights */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* Shadow scale */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* Animation durations */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --duration-slower: 700ms;
+
+  /* Animation easings */
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Z-index scale */
+  --z-base: 0;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-overlay: 30;
+  --z-modal: 40;
+  --z-popover: 50;
+  --z-toast: 60;
+  --z-tooltip: 70;
+
+  /* Border widths */
+  --border-width: 1px;
+  --border-width-thick: 2px;
+
+  /* Focus ring */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
 }
 
 @theme inline {
@@ -55,11 +124,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Force light mode for our color scheme */
+/* Force light mode for our Pinterest-inspired color scheme */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 242 243 241; /* Keep ivory background even in dark mode */
-    --foreground: 102 117 108; /* Keep evergreen text */
+    --background: 255 255 255; /* Keep white background even in dark mode */
+    --foreground: 51 51 51; /* Keep charcoal text */
   }
 }
 
@@ -87,4 +156,128 @@ html {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--muted), 0.2) 0%,
+    rgba(var(--primary), 0.3) 20%,
+    rgba(var(--muted), 0.2) 40%,
+    rgba(var(--muted), 0.2) 100%
+  );
+  background-size: 1000px 100%;
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in var(--duration-normal) var(--ease-out);
+}
+
+/* Slide up animation */
+@keyframes slide-up {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up var(--duration-normal) var(--ease-out);
+}
+
+/* Slide down animation */
+@keyframes slide-down {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down var(--duration-fast) var(--ease-out);
+}
+
+/* Scale in animation */
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in var(--duration-fast) var(--ease-out);
+}
+
+/* Heart pop animation */
+@keyframes heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-heart-pop {
+  animation: heart-pop var(--duration-normal) var(--ease-bounce);
+}
+
+/* Focus styles */
+.focus-ring {
+  outline: var(--focus-ring-width) solid rgb(var(--ring));
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all var(--duration-normal) var(--ease-in-out);
+}
+
+.transition-fast {
+  transition: all var(--duration-fast) var(--ease-in-out);
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(var(--background), 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(var(--border), 0.3);
 }

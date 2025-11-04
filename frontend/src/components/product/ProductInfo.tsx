@@ -55,7 +55,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             ))}
           </div>
           <span className="text-sm font-medium text-evergreen">
-            {product.rating.toFixed(1)}
+            {product.rating?.toFixed(1)}
           </span>
           {product.review_count && product.review_count > 0 && (
             <span className="text-sm text-evergreen/60">
@@ -70,7 +70,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-blush/50 rounded-lg">
           <Award className="w-4 h-4 text-sage" />
           <span className="text-sm font-medium text-evergreen">
-            Quality Score: {(product.quality_score * 100).toFixed(0)}%
+            Quality Score: {((product.quality_score || 0) * 100).toFixed(0)}%
           </span>
         </div>
       )}

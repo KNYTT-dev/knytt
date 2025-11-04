@@ -1,16 +1,47 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Heart, ShoppingBag, User, LogOut, Settings, History, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { Search, Heart, ShoppingBag, User, LogOut, Settings, History, Sparkles, Menu, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/queries/auth";
+import Tooltip from "@/components/ui/Tooltip";
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuth();
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setShowMobileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (showMobileMenu) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showMobileMenu]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,15 +56,28 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-ivory border-b border-sage/20 backdrop-blur-sm">
+    <header className="sticky top-0 z-[var(--z-sticky)] glass border-b border-light-gray">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="md:hidden p-2 hover:bg-light-gray rounded-lg transition-all active:scale-95"
+            aria-label="Toggle mobile menu"
+          >
+            {showMobileMenu ? (
+              <X className="w-6 h-6 text-charcoal" />
+            ) : (
+              <Menu className="w-6 h-6 text-charcoal" />
+            )}
+          </button>
+
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-sage to-evergreen rounded-full flex items-center justify-center">
-              <span className="text-ivory font-bold text-lg">K</span>
+            <div className="w-10 h-10 bg-pinterest-red rounded-full flex items-center justify-center shadow-md group-hover:shadow-xl transition-all group-hover:scale-110">
+              <span className="text-white font-bold text-lg">K</span>
             </div>
-            <span className="text-2xl font-bold text-evergreen group-hover:text-sage transition-colors">
+            <span className="text-2xl font-bold text-charcoal group-hover:text-pinterest-red transition-colors duration-[var(--duration-fast)]">
               Knytt
             </span>
           </Link>
@@ -42,14 +86,14 @@ export function Header() {
           <nav className="hidden md:flex items-center gap-6">
             <Link
               href="/"
-              className="text-evergreen hover:text-sage transition-colors font-medium"
+              className="text-charcoal hover:text-pinterest-red transition-colors font-medium"
             >
               Discover
             </Link>
             {isAuthenticated && (
               <Link
                 href="/feed"
-                className="text-evergreen hover:text-sage transition-colors font-medium flex items-center gap-1"
+                className="text-charcoal hover:text-pinterest-red transition-colors font-medium flex items-center gap-1"
               >
                 <Sparkles className="w-4 h-4" />
                 For You
@@ -57,7 +101,7 @@ export function Header() {
             )}
             <Link
               href="/search"
-              className="text-evergreen hover:text-sage transition-colors font-medium"
+              className="text-charcoal hover:text-pinterest-red transition-colors font-medium"
             >
               Search
             </Link>
@@ -65,14 +109,14 @@ export function Header() {
 
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="flex-1 max-w-2xl hidden lg:block">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray group-focus-within:text-pinterest-red transition-colors" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for products..."
-                className="w-full pl-12 pr-4 py-3 bg-white border border-blush rounded-full focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-white border-2 border-light-gray rounded-full focus:outline-none focus:ring-4 focus:ring-pinterest-red/20 focus:border-pinterest-red transition-all duration-[var(--duration-fast)] shadow-sm focus:shadow-md"
               />
             </div>
           </form>
@@ -82,48 +126,52 @@ export function Header() {
             {/* Mobile Search */}
             <Link
               href="/search"
-              className="lg:hidden p-2 hover:bg-blush rounded-full transition-colors"
+              className="lg:hidden p-2 hover:bg-light-gray rounded-full transition-colors"
             >
-              <Search className="w-5 h-5 text-evergreen" />
+              <Search className="w-5 h-5 text-charcoal" />
             </Link>
 
             {/* Favorites */}
-            <Link
-              href="/favorites"
-              className="p-2 hover:bg-blush rounded-full transition-colors group relative"
-            >
-              <Heart className="w-5 h-5 text-evergreen group-hover:text-terracotta transition-colors" />
-            </Link>
+            <Tooltip content="Favorites">
+              <Link
+                href="/favorites"
+                className="p-2.5 hover:bg-light-gray rounded-full transition-all duration-[var(--duration-fast)] group relative active:scale-95"
+              >
+                <Heart className="w-5 h-5 text-charcoal group-hover:text-pinterest-red transition-colors group-hover:scale-110" />
+              </Link>
+            </Tooltip>
 
             {/* Cart */}
-            <button className="p-2 hover:bg-blush rounded-full transition-colors group relative">
-              <ShoppingBag className="w-5 h-5 text-evergreen group-hover:text-terracotta transition-colors" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-terracotta text-white text-xs rounded-full flex items-center justify-center">
-                0
-              </span>
-            </button>
+            <Tooltip content="Shopping Cart">
+              <button className="p-2.5 hover:bg-light-gray rounded-full transition-all duration-[var(--duration-fast)] group relative active:scale-95">
+                <ShoppingBag className="w-5 h-5 text-charcoal group-hover:text-pinterest-red transition-colors group-hover:scale-110" />
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-pinterest-red text-white text-xs rounded-full flex items-center justify-center font-medium shadow-md">
+                  0
+                </span>
+              </button>
+            </Tooltip>
 
             {/* User Profile / Auth */}
             {isAuthenticated && user ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 p-2 hover:bg-blush rounded-full transition-colors"
+                  className="flex items-center gap-2 p-2 hover:bg-light-gray rounded-full transition-all duration-[var(--duration-fast)] active:scale-95"
                 >
-                  <User className="w-5 h-5 text-evergreen" />
-                  <span className="hidden sm:block text-sm text-evergreen font-medium">
+                  <User className="w-5 h-5 text-charcoal" />
+                  <span className="hidden sm:block text-sm text-charcoal font-medium">
                     {user.email.split('@')[0]}
                   </span>
                 </button>
 
                 {/* User Dropdown Menu */}
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-sage/20 py-2 z-50">
-                    <div className="px-4 py-2 border-b border-sage/10">
-                      <p className="text-sm font-medium text-evergreen">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border-2 border-light-gray py-2 z-[var(--z-dropdown)] animate-slide-down">
+                    <div className="px-4 py-2 border-b border-light-gray">
+                      <p className="text-sm font-medium text-charcoal">
                         {user.email}
                       </p>
-                      <p className="text-xs text-sage">
+                      <p className="text-xs text-gray">
                         {user.total_interactions} interactions
                       </p>
                     </div>
@@ -133,10 +181,10 @@ export function Header() {
                         router.push('/favorites');
                         setShowUserMenu(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-2 hover:bg-blush/50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-light-gray transition-all duration-[var(--duration-fast)] text-left group"
                     >
-                      <Heart className="w-4 h-4 text-terracotta" />
-                      <span className="text-sm text-evergreen">Favorites</span>
+                      <Heart className="w-4 h-4 text-pinterest-red group-hover:scale-110 transition-transform" />
+                      <span className="text-sm text-charcoal font-medium">Favorites</span>
                     </button>
 
                     <button
@@ -144,10 +192,10 @@ export function Header() {
                         router.push('/history');
                         setShowUserMenu(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-2 hover:bg-blush/50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-light-gray transition-all duration-[var(--duration-fast)] text-left group"
                     >
-                      <History className="w-4 h-4 text-sage" />
-                      <span className="text-sm text-evergreen">History</span>
+                      <History className="w-4 h-4 text-gray group-hover:scale-110 transition-transform" />
+                      <span className="text-sm text-charcoal font-medium">History</span>
                     </button>
 
                     <button
@@ -155,18 +203,20 @@ export function Header() {
                         router.push('/settings');
                         setShowUserMenu(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-2 hover:bg-blush/50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-light-gray transition-all duration-[var(--duration-fast)] text-left group"
                     >
-                      <Settings className="w-4 h-4 text-sage" />
-                      <span className="text-sm text-evergreen">Settings</span>
+                      <Settings className="w-4 h-4 text-gray group-hover:scale-110 transition-transform" />
+                      <span className="text-sm text-charcoal font-medium">Settings</span>
                     </button>
+
+                    <div className="border-t border-light-gray my-1" />
 
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-2 hover:bg-blush/50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-all duration-[var(--duration-fast)] text-left group"
                     >
-                      <LogOut className="w-4 h-4 text-sage" />
-                      <span className="text-sm text-evergreen">Logout</span>
+                      <LogOut className="w-4 h-4 text-red-600 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm text-red-600 font-medium">Logout</span>
                     </button>
                   </div>
                 )}
@@ -175,13 +225,13 @@ export function Header() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="px-4 py-2 text-sm font-medium text-evergreen hover:text-sage transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-charcoal hover:text-pinterest-red transition-colors"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-2 text-sm font-medium bg-terracotta text-white rounded-full hover:bg-terracotta/90 transition-colors"
+                  className="px-4 py-2 text-sm font-medium bg-pinterest-red text-white rounded-full hover:bg-dark-red transition-colors"
                 >
                   Sign Up
                 </Link>
@@ -189,6 +239,99 @@ export function Header() {
             )}
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {showMobileMenu && (
+          <div
+            ref={mobileMenuRef}
+            className="md:hidden fixed inset-0 top-[73px] bg-ivory z-[var(--z-overlay)] animate-fade-in"
+          >
+            <nav className="flex flex-col p-6 space-y-2">
+              <Link
+                href="/"
+                onClick={() => setShowMobileMenu(false)}
+                className="px-4 py-3 text-lg font-medium text-charcoal hover:bg-light-gray rounded-lg transition-all active:scale-95"
+              >
+                Discover
+              </Link>
+              {isAuthenticated && (
+                <Link
+                  href="/feed"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="px-4 py-3 text-lg font-medium text-charcoal hover:bg-light-gray rounded-lg transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  For You
+                </Link>
+              )}
+              <Link
+                href="/search"
+                onClick={() => setShowMobileMenu(false)}
+                className="px-4 py-3 text-lg font-medium text-charcoal hover:bg-light-gray rounded-lg transition-all active:scale-95"
+              >
+                Search
+              </Link>
+
+              <div className="border-t border-light-gray my-4" />
+
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    href="/favorites"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="px-4 py-3 text-lg font-medium text-charcoal hover:bg-light-gray rounded-lg transition-all active:scale-95 flex items-center gap-3"
+                  >
+                    <Heart className="w-5 h-5 text-pinterest-red" />
+                    Favorites
+                  </Link>
+                  <Link
+                    href="/history"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="px-4 py-3 text-lg font-medium text-charcoal hover:bg-light-gray rounded-lg transition-all active:scale-95 flex items-center gap-3"
+                  >
+                    <History className="w-5 h-5 text-gray" />
+                    History
+                  </Link>
+                  <Link
+                    href="/settings"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="px-4 py-3 text-lg font-medium text-charcoal hover:bg-light-gray rounded-lg transition-all active:scale-95 flex items-center gap-3"
+                  >
+                    <Settings className="w-5 h-5 text-gray" />
+                    Settings
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setShowMobileMenu(false);
+                    }}
+                    className="px-4 py-3 text-lg font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-95 flex items-center gap-3 text-left"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="px-4 py-3 text-lg font-medium text-charcoal hover:bg-light-gray rounded-lg transition-all active:scale-95"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="px-4 py-3 text-lg font-medium bg-pinterest-red text-white rounded-lg hover:bg-dark-red transition-all active:scale-95 text-center"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );

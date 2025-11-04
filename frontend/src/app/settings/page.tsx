@@ -26,15 +26,9 @@ export default function SettingsPage() {
   const updatePreferences = useUpdatePreferences();
 
   const [activeTab, setActiveTab] = useState<TabType>("profile");
-  const [preferredCategories, setPreferredCategories] = useState<string[]>(
-    user?.preferred_categories || []
-  );
-  const [priceMin, setPriceMin] = useState<string>(
-    user?.price_band_min?.toString() || ""
-  );
-  const [priceMax, setPriceMax] = useState<string>(
-    user?.price_band_max?.toString() || ""
-  );
+  const [preferredCategories, setPreferredCategories] = useState<string[]>([]);
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
 
   // Redirect to login if not authenticated
   if (!authLoading && !isAuthenticated) {
@@ -138,7 +132,7 @@ export default function SettingsPage() {
                     </label>
                     <input
                       type="text"
-                      value={user?.full_name || ""}
+                      value={user?.email.split('@')[0] || ""}
                       disabled
                       className="w-full px-4 py-2 border border-sage/20 rounded-lg bg-gray-50 text-gray-600"
                     />

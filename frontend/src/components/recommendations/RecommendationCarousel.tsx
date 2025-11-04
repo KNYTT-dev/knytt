@@ -10,7 +10,7 @@ import Link from "next/link";
 interface RecommendationCarouselProps {
   title: string;
   products: ProductResult[];
-  userId?: string;
+  userId?: number;
   context?: string;
   isLoading?: boolean;
 }

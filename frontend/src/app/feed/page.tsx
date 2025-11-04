@@ -154,7 +154,7 @@ export default function FeedPage() {
           <RecommendationCarousel
             title="Recommended for You"
             products={feedData.results}
-            userId={user?.id.toString()}
+            userId={user?.id}
             context="personalized_feed"
           />
         ) : (

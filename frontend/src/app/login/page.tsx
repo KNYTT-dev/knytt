@@ -7,6 +7,8 @@ import Link from "next/link";
 import { useAuth } from "@/lib/queries/auth";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Input, Button } from "@/components/ui";
+import { Mail, Lock, ArrowLeft } from "lucide-react";
 
 // Validation schema
 const loginSchema = z.object({
@@ -40,21 +42,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ivory flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-lg p-8">
+    <div className="min-h-screen bg-ivory flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 border-2 border-blush">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-evergreen mb-2">
+            <div className="w-16 h-16 mx-auto mb-4 bg-pinterest-red rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-2xl">K</span>
+            </div>
+            <h1 className="text-4xl font-bold text-charcoal mb-2">
               Welcome Back
             </h1>
-            <p className="text-sage">Sign in to your account</p>
+            <p className="text-gray">Sign in to your account</p>
           </div>
 
           {/* Error Message */}
           {loginError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700 text-sm">
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg animate-slide-down">
+              <p className="text-red-700 text-sm font-medium flex items-center gap-2">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
                 {(loginError as any)?.message || "Login failed. Please check your credentials."}
               </p>
             </div>
@@ -63,57 +71,35 @@ export default function LoginPage() {
           {/* Login Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email Field */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-evergreen mb-2"
-              >
-                Email Address
-              </label>
-              <input
-                {...register("email")}
-                type="email"
-                id="email"
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta focus:border-transparent"
-                placeholder="you@example.com"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
+            <Input
+              {...register("email")}
+              label="Email Address"
+              type="email"
+              leftIcon={<Mail className="w-5 h-5" />}
+              error={errors.email?.message}
+              floatingLabel={true}
+            />
 
             {/* Password Field */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-evergreen mb-2"
-              >
-                Password
-              </label>
-              <input
-                {...register("password")}
-                type="password"
-                id="password"
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta focus:border-transparent"
-                placeholder="••••••••"
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
+            <Input
+              {...register("password")}
+              label="Password"
+              type="password"
+              leftIcon={<Lock className="w-5 h-5" />}
+              error={errors.password?.message}
+              floatingLabel={true}
+            />
 
             {/* Submit Button */}
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-terracotta hover:bg-terracotta/90 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="secondary"
+              size="lg"
+              loading={isLoading}
+              className="w-full"
             >
-              {isLoading ? "Signing in..." : "Sign In"}
-            </button>
+              Sign In
+            </Button>
           </form>
 
           {/* Footer Links */}
@@ -131,12 +117,13 @@ export default function LoginPage() {
         </div>
 
         {/* Back to Home */}
-        <div className="mt-4 text-center">
+        <div className="mt-6 text-center">
           <Link
             href="/"
-            className="text-sm text-sage hover:text-evergreen transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-sage hover:text-evergreen transition-colors font-medium"
           >
-            ← Back to home
+            <ArrowLeft className="w-4 h-4" />
+            Back to home
           </Link>
         </div>
       </div>

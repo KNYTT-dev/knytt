@@ -162,7 +162,7 @@ export default function ProductDetailPage() {
             {/* Left Column - Image Gallery */}
             <div className="lg:sticky lg:top-24 self-start">
               <ProductImageGallery
-                mainImage={product.image_url}
+                mainImage={product.image_url || null}
                 additionalImages={[]}
                 productTitle={product.title}
               />

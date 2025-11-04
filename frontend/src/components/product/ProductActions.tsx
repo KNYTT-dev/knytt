@@ -7,7 +7,7 @@ import { InteractionType } from "@/types/enums";
 
 interface ProductActionsProps {
   productId: string;
-  userId?: string;
+  userId?: number;
   inStock: boolean;
 }
 

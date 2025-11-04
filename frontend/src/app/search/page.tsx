@@ -30,9 +30,9 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-ivory">
       {/* Search Header */}
-      <section className="bg-gradient-to-br from-ivory via-blush to-sage/20 border-b border-blush">
+      <section className="bg-gradient-to-br from-white via-light-gray to-pinterest-red/5 border-b border-light-gray">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold text-evergreen mb-6">
+          <h1 className="text-4xl font-bold text-charcoal mb-6">
             Search Products
           </h1>
           <SearchBar
@@ -48,14 +48,14 @@ export default function SearchPage() {
         {/* Loading State */}
         {isLoading && (
           <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-sage border-r-transparent"></div>
-            <p className="mt-4 text-evergreen/60">Searching...</p>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-pinterest-red border-r-transparent"></div>
+            <p className="mt-4 text-gray">Searching...</p>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 text-center">
             <p className="text-red-600 font-medium">
               Error: {error.message}
             </p>
@@ -65,7 +65,7 @@ export default function SearchPage() {
         {/* Empty State - Before Search */}
         {!hasSearched && !isLoading && (
           <div className="text-center py-12">
-            <p className="text-evergreen/60 text-lg">
+            <p className="text-gray text-lg">
               Enter a search query to find products
             </p>
           </div>
@@ -74,7 +74,7 @@ export default function SearchPage() {
         {/* No Results */}
         {hasSearched && !isLoading && !error && data?.results.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-evergreen/60 text-lg">
+            <p className="text-gray text-lg">
               No products found for &quot;{searchQuery}&quot;
             </p>
           </div>
@@ -84,7 +84,7 @@ export default function SearchPage() {
         {data && data.results.length > 0 && (
           <div>
             <div className="mb-6">
-              <p className="text-evergreen/60">
+              <p className="text-gray">
                 Found {data.total} results in {data.search_time_ms.toFixed(0)}ms
                 {data.personalized && " (personalized)"}
               </p>

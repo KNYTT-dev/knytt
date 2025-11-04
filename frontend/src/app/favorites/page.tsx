@@ -32,7 +32,7 @@ export default function FavoritesPage() {
     e.stopPropagation();
     if (!user?.id) return;
     feedbackMutation.mutate({
-      user_id: user.id.toString(),
+      user_id: user.id,
       product_id: productId,
       interaction_type: InteractionType.ADD_TO_CART,
       context: "favorites",
@@ -42,7 +42,7 @@ export default function FavoritesPage() {
   const handleClick = (productId: string) => {
     if (!user?.id) return;
     feedbackMutation.mutate({
-      user_id: user.id.toString(),
+      user_id: user.id,
       product_id: productId,
       interaction_type: InteractionType.CLICK,
       context: "favorites",

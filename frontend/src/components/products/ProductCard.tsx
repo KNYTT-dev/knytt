@@ -5,6 +5,8 @@ import { Heart, ShoppingCart } from "lucide-react";
 import { ProductResult } from "@/types/api";
 import { InteractionType } from "@/types/enums";
 import { useTrackInteraction } from "@/lib/queries/feedback";
+import { useToast } from "@/components/ui/Toast";
+import Tooltip from "@/components/ui/Tooltip";
 
 interface ProductCardProps {
   product: ProductResult;
@@ -14,17 +16,30 @@ interface ProductCardProps {
 
 export function ProductCard({ product, userId, onProductClick }: ProductCardProps) {
   const [isLiked, setIsLiked] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [justLiked, setJustLiked] = useState(false);
   const feedbackMutation = useTrackInteraction();
+  const toast = useToast();
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
 
     if (!userId) {
-      console.warn("User ID required for interactions");
+      toast.warning("Please login to like products");
       return;
     }
 
-    setIsLiked(!isLiked);
+    const newLikedState = !isLiked;
+    setIsLiked(newLikedState);
+
+    // Trigger heart animation
+    if (newLikedState) {
+      setJustLiked(true);
+      setTimeout(() => setJustLiked(false), 300);
+      toast.success("Added to favorites");
+    } else {
+      toast.info("Removed from favorites");
+    }
 
     feedbackMutation.mutate({
       user_id: userId,
@@ -37,7 +52,12 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
     e.stopPropagation(); // Prevent card click
 
     if (!userId) {
-      console.warn("User ID required for interactions");
+      toast.warning("Please login to add to cart");
+      return;
+    }
+
+    if (!product.in_stock) {
+      toast.error("This product is out of stock");
       return;
     }
 
@@ -47,8 +67,7 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
       interaction_type: InteractionType.ADD_TO_CART,
     });
 
-    // TODO: Add to actual cart state
-    console.log("Added to cart:", product.title);
+    toast.success("Added to cart", product.title);
   };
 
   const handleCardClick = () => {
@@ -73,45 +92,55 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
   return (
     <div
       onClick={handleCardClick}
-      className="group relative bg-background border border-border rounded-lg overflow-hidden hover:border-primary/50 transition-all cursor-pointer hover:shadow-lg"
+      className="group relative bg-white border-2 border-light-gray rounded-xl overflow-hidden hover:border-pinterest-red/30 transition-all duration-[var(--duration-slow)] cursor-pointer hover:shadow-xl shadow-md active:scale-[0.98]"
     >
       {/* Product Image */}
-      <div className="relative aspect-square bg-muted overflow-hidden">
+      <div className="relative aspect-square bg-light-gray/50 overflow-hidden">
         {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-          />
+          <>
+            {!imageLoaded && (
+              <div className="absolute inset-0 bg-light-gray animate-shimmer" />
+            )}
+            <img
+              src={product.image_url}
+              alt={product.title}
+              className={`w-full h-full object-cover group-hover:scale-110 transition-all duration-[var(--duration-slower)] ${
+                imageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+              loading="lazy"
+              onLoad={() => setImageLoaded(true)}
+            />
+          </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            No image
+          <div className="w-full h-full flex items-center justify-center text-gray">
+            <span className="text-sm">No image</span>
           </div>
         )}
 
         {/* Like Button Overlay */}
-        <button
-          onClick={handleLike}
-          className={`absolute top-2 right-2 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-border hover:bg-background transition-colors ${
-            isLiked ? "text-red-500" : "text-muted-foreground hover:text-foreground"
-          }`}
-          aria-label={isLiked ? "Unlike product" : "Like product"}
-        >
-          <Heart
-            className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`}
-          />
-        </button>
+        <Tooltip content={isLiked ? "Unlike" : "Like"}>
+          <button
+            onClick={handleLike}
+            className={`absolute top-3 right-3 p-2.5 rounded-full glass shadow-lg hover:shadow-xl transition-all duration-[var(--duration-fast)] active:scale-95 z-10 ${
+              isLiked ? "text-pinterest-red bg-white" : "text-charcoal/70 hover:text-pinterest-red bg-white"
+            } ${justLiked ? "animate-heart-pop" : ""}`}
+            aria-label={isLiked ? "Unlike product" : "Like product"}
+          >
+            <Heart
+              className={`h-5 w-5 transition-all ${isLiked ? "fill-current scale-110" : ""}`}
+            />
+          </button>
+        </Tooltip>
 
         {/* Stock Badge */}
         {product.in_stock !== undefined && (
-          <div className="absolute bottom-2 left-2">
+          <div className="absolute bottom-3 left-3">
             {product.in_stock ? (
-              <span className="px-2 py-1 text-xs font-medium bg-green-500/90 text-white rounded">
+              <span className="px-3 py-1.5 text-xs font-semibold bg-green-500 text-white rounded-full shadow-md">
                 In Stock
               </span>
             ) : (
-              <span className="px-2 py-1 text-xs font-medium bg-red-500/90 text-white rounded">
+              <span className="px-3 py-1.5 text-xs font-semibold bg-red-500 text-white rounded-full shadow-md">
                 Out of Stock
               </span>
             )}
@@ -129,7 +158,7 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
         )}
 
         {/* Title */}
-        <h3 className="text-sm font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="text-base font-bold text-charcoal mb-2 line-clamp-2 group-hover:text-pinterest-red transition-colors duration-[var(--duration-fast)]">
           {product.title}
         </h3>
 
@@ -166,30 +195,32 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
         )}
 
         {/* Price and Cart Button */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mt-4">
           <div className="flex flex-col">
-            <span className="text-lg font-bold text-primary">
+            <span className="text-xl font-bold text-pinterest-red">
               {formatPrice()}
             </span>
             {product.quality_score && product.quality_score < 1 && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-gray">
                 Quality: {(product.quality_score * 100).toFixed(0)}%
               </span>
             )}
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            disabled={!product.in_stock}
-            className={`p-2 rounded-full transition-colors ${
-              product.in_stock
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
-            }`}
-            aria-label="Add to cart"
-          >
-            <ShoppingCart className="h-5 w-5" />
-          </button>
+          <Tooltip content={product.in_stock ? "Add to cart" : "Out of stock"}>
+            <button
+              onClick={handleAddToCart}
+              disabled={!product.in_stock}
+              className={`p-3 rounded-full transition-all duration-[var(--duration-fast)] shadow-md hover:shadow-lg active:scale-95 ${
+                product.in_stock
+                  ? "bg-pinterest-red text-white hover:bg-dark-red"
+                  : "bg-light-gray text-gray cursor-not-allowed"
+              }`}
+              aria-label="Add to cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+            </button>
+          </Tooltip>
         </div>
 
         {/* Relevance Score (for debugging/demo) */}
