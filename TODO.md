@@ -2,11 +2,11 @@
 
 ## Features
 ### Task 1
-- [ ] Step 1
+- [x] Step 1
   - [x] Environment Setup
     - Directory
     - Packages 
-  - [ ] Test Data Setup
+  - [x] Test Data Setup
     - Uniformly sampled cases (400)
     - Duplicate and near duplicates (150)
     - Pricing edge cases (100)
@@ -55,6 +55,28 @@
   - [x] Automated Setup Scripts
   - Proper Logging and Documentation
 
-## Bug Fixes
+### Task 6
+- [ ] 'Social Aspect'
 
+### Task 7
+- [ ] Clothing Avatar
+
+## Bug Fixes
+- [ ] Caching
+
+- [ ] User Profile
+  - [ ] Onboarding
+  - [ ] Learnable mixure of long/short term embeddings
+  - [ ] More influential & Adaptive Updates of Embeddings via Interactions
+
+- [ ] Engineering of Link to Product on Host Site
+
+- [ ] Data Filtering
+  - ex: no Images
+
+- [ ] Enhance similarity/clustering of products
+  - [ ] Contrastive Clustering
+  - [ ] LLM assisted
+  - [ ] XGBoost Ranking
+  
 ## Refactoring
