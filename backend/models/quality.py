@@ -6,6 +6,10 @@ from typing import Dict, List, Tuple, Optional
 import re
 from decimal import Decimal
 from enum import Enum
+import httpx
+from io import BytesIO
+from PIL import Image
+import asyncio
 
 
 class QualitySeverity(str, Enum):
@@ -186,17 +190,27 @@ class PriceValidator:
 
 class ImageValidator:
     """Validate product images."""
-    
+
+    # Minimum acceptable image dimensions
+    MIN_IMAGE_WIDTH = 100
+    MIN_IMAGE_HEIGHT = 100
+
+    # Maximum image size to download (10MB)
+    MAX_IMAGE_SIZE = 10 * 1024 * 1024
+
+    # Request timeout in seconds
+    REQUEST_TIMEOUT = 10
+
     @staticmethod
     def validate_image_urls(product: Dict) -> List[Dict]:
         """Check image URLs for common issues."""
         issues = []
-        
+
         image_fields = [
             'merchant_image_url', 'aw_image_url', 'large_image',
             'alternate_image', 'alternate_image_two'
         ]
-        
+
         for field in image_fields:
             url = product.get(field)
             if url:
@@ -210,7 +224,7 @@ class ImageValidator:
                         'issue': 'placeholder_image',
                         'severity': QualitySeverity.INFO
                     })
-                
+
                 # Check for suspicious domains
                 if any(domain in str(url).lower() for domain in [
                     'dropbox.com', 'drive.google.com', 'temporary'
@@ -220,7 +234,7 @@ class ImageValidator:
                         'issue': 'suspicious_image_host',
                         'severity': QualitySeverity.WARNING
                     })
-        
+
         # Check if no images at all
         has_any_image = any(product.get(field) for field in image_fields)
         if not has_any_image:
@@ -229,5 +243,158 @@ class ImageValidator:
                 'issue': 'no_images',
                 'severity': QualitySeverity.WARNING
             })
-        
+
         return issues
+
+    @staticmethod
+    async def validate_image_url_accessibility(url: str) -> Tuple[bool, str, Optional[Dict]]:
+        """
+        Verify image URL is accessible using HTTP HEAD request.
+
+        Args:
+            url: Image URL to validate
+
+        Returns:
+            Tuple of (is_valid, error_message, metadata)
+            metadata includes: content_type, content_length, status_code
+        """
+        if not url:
+            return False, "Empty URL", None
+
+        try:
+            async with httpx.AsyncClient(
+                timeout=ImageValidator.REQUEST_TIMEOUT,
+                follow_redirects=True
+            ) as client:
+                response = await client.head(url)
+
+                # Check HTTP status
+                if response.status_code != 200:
+                    return False, f"HTTP {response.status_code}", {
+                        'status_code': response.status_code
+                    }
+
+                # Check content type
+                content_type = response.headers.get('content-type', '').lower()
+                if not content_type.startswith('image/'):
+                    return False, f"Invalid content-type: {content_type}", {
+                        'content_type': content_type,
+                        'status_code': response.status_code
+                    }
+
+                # Get content length if available
+                content_length = response.headers.get('content-length')
+                if content_length:
+                    content_length = int(content_length)
+                    if content_length > ImageValidator.MAX_IMAGE_SIZE:
+                        return False, f"Image too large: {content_length} bytes", {
+                            'content_type': content_type,
+                            'content_length': content_length,
+                            'status_code': response.status_code
+                        }
+
+                return True, "OK", {
+                    'content_type': content_type,
+                    'content_length': content_length,
+                    'status_code': response.status_code
+                }
+
+        except httpx.TimeoutException:
+            return False, "Request timeout", None
+        except httpx.RequestError as e:
+            return False, f"Request failed: {str(e)[:100]}", None
+        except Exception as e:
+            return False, f"Unexpected error: {str(e)[:100]}", None
+
+    @staticmethod
+    async def validate_image_integrity(url: str) -> Tuple[bool, str, Optional[Dict]]:
+        """
+        Download and verify image can be opened by PIL.
+        Also checks image dimensions.
+
+        Args:
+            url: Image URL to validate
+
+        Returns:
+            Tuple of (is_valid, error_message, metadata)
+            metadata includes: width, height, format, mode
+        """
+        if not url:
+            return False, "Empty URL", None
+
+        try:
+            async with httpx.AsyncClient(
+                timeout=ImageValidator.REQUEST_TIMEOUT * 1.5,  # Longer timeout for download
+                follow_redirects=True
+            ) as client:
+                response = await client.get(url)
+                response.raise_for_status()
+
+                # Check size before processing
+                content_length = len(response.content)
+                if content_length > ImageValidator.MAX_IMAGE_SIZE:
+                    return False, f"Image too large: {content_length} bytes", None
+
+                # Try to open with PIL
+                image_data = BytesIO(response.content)
+                img = Image.open(image_data)
+
+                # Verify it's a valid image (loads the image data)
+                img.verify()
+
+                # Reopen after verify (verify() invalidates the image)
+                image_data.seek(0)
+                img = Image.open(image_data)
+
+                # Get image properties
+                width, height = img.size
+                image_format = img.format
+                image_mode = img.mode
+
+                # Check minimum dimensions
+                if width < ImageValidator.MIN_IMAGE_WIDTH or height < ImageValidator.MIN_IMAGE_HEIGHT:
+                    return False, f"Image too small: {width}x{height}", {
+                        'width': width,
+                        'height': height,
+                        'format': image_format,
+                        'mode': image_mode
+                    }
+
+                # Check if image is suspiciously small in bytes (might be placeholder)
+                if content_length < 1000:  # Less than 1KB
+                    return False, f"Image file too small: {content_length} bytes", {
+                        'width': width,
+                        'height': height,
+                        'format': image_format,
+                        'mode': image_mode,
+                        'size_bytes': content_length
+                    }
+
+                return True, "OK", {
+                    'width': width,
+                    'height': height,
+                    'format': image_format,
+                    'mode': image_mode,
+                    'size_bytes': content_length
+                }
+
+        except httpx.TimeoutException:
+            return False, "Download timeout", None
+        except httpx.HTTPStatusError as e:
+            return False, f"HTTP {e.response.status_code}", None
+        except httpx.RequestError as e:
+            return False, f"Download failed: {str(e)[:100]}", None
+        except Image.UnidentifiedImageError:
+            return False, "Not a valid image format", None
+        except Exception as e:
+            return False, f"PIL validation failed: {str(e)[:100]}", None
+
+    @staticmethod
+    def validate_image_url_accessibility_sync(url: str) -> Tuple[bool, str, Optional[Dict]]:
+        """Synchronous wrapper for validate_image_url_accessibility."""
+        return asyncio.run(ImageValidator.validate_image_url_accessibility(url))
+
+    @staticmethod
+    def validate_image_integrity_sync(url: str) -> Tuple[bool, str, Optional[Dict]]:
+        """Synchronous wrapper for validate_image_integrity."""
+        return asyncio.run(ImageValidator.validate_image_integrity(url))

@@ -20,7 +20,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import NullPool
 
 from backend.models.product import ProductIngestion, ProductCanonical
-from backend.models.quality import ContentModerator, PriceValidator
+from backend.models.quality import ContentModerator, PriceValidator, ImageValidator
 
 from backend.ingestion.deduplicators.deduplicator import AdvancedDeduplicator
 
@@ -63,24 +63,27 @@ class CSVIngestionPipeline:
     """
     
     def __init__(
-        self, 
+        self,
         db_url: str,
         chunk_size: int = 1000,
         quality_threshold: float = 0.3,
-        enable_dedup: bool = True
+        enable_dedup: bool = True,
+        validate_images: bool = True
     ):
         """
         Initialize the ingestion pipeline.
-        
+
         Args:
             db_url: Database connection URL
             chunk_size: Number of rows to process at once
             quality_threshold: Minimum quality score to accept product
             enable_dedup: Whether to check for duplicates
+            validate_images: Whether to validate image URLs during ingestion
         """
         self.chunk_size = chunk_size
         self.quality_threshold = quality_threshold
         self.enable_dedup = enable_dedup
+        self.validate_images = validate_images
         
         # Database setup
         self.engine = create_engine(
@@ -101,6 +104,7 @@ class CSVIngestionPipeline:
             'new_products': 0,
             'updated_products': 0,
             'failed_rows': 0,
+            'invalid_images': 0,
             'errors': []
         }
         self.deduplicator = (
@@ -208,24 +212,24 @@ class CSVIngestionPipeline:
     def _process_chunk(self, df: pd.DataFrame, ingestion_log_id: str):
         """Process a single chunk of data."""
         session = self.Session()
-        
+
         try:
             # Convert DataFrame rows to dicts
             records = df.to_dict('records')
-            
+
             validated_products = []
             invalid_products = []
-            
+
             for row_idx, record in enumerate(records):
                 self.stats['processed'] += 1
-                
+
                 # Clean the record
                 record = self._clean_record(record)
-                
+
                 try:
                     # Validate with Pydantic
                     product = ProductIngestion(**record)
-                    
+
                     # Check quality threshold
                     if product.quality_score < self.quality_threshold:
                         self.stats['low_quality'] += 1
@@ -236,7 +240,7 @@ class CSVIngestionPipeline:
                             'low_quality_score'
                         )
                         continue
-                    
+
                     # Check for NSFW/spam
                     is_nsfw, nsfw_reason = ContentModerator.check_nsfw(record)
                     if is_nsfw:
@@ -248,10 +252,32 @@ class CSVIngestionPipeline:
                             nsfw_reason
                         )
                         continue
-                    
+
+                    # Validate image URL if enabled
+                    if self.validate_images:
+                        image_valid, image_status, image_metadata = asyncio.run(
+                            self._validate_product_image(product)
+                        )
+
+                        # Store validation results for later database update
+                        product.image_validation_status = image_status
+                        product.image_validation_metadata = image_metadata
+
+                        if not image_valid:
+                            self.stats['invalid_images'] += 1
+                            self._log_quality_issue(
+                                session,
+                                product,
+                                ingestion_log_id,
+                                'invalid_image',
+                                image_metadata
+                            )
+                            # Don't skip product, just mark it
+                            logger.debug(f"Product {product.merchant_product_id} has invalid image: {image_status}")
+
                     validated_products.append(product)
                     self.stats['valid'] += 1
-                    
+
                 except Exception as e:
                     self.stats['invalid'] += 1
                     invalid_products.append({
@@ -259,7 +285,7 @@ class CSVIngestionPipeline:
                         'error': str(e),
                         'row': self.stats['processed']
                     })
-                    
+
                     # Log first few errors in detail
                     if len(self.stats['errors']) < 10:
                         self.stats['errors'].append({
@@ -316,10 +342,35 @@ class CSVIngestionPipeline:
                     value = float(value)
                 elif isinstance(value, np.bool_):
                     value = bool(value)
-                    
+
                 cleaned[key] = value
-        
+
         return cleaned
+
+    async def _validate_product_image(self, product: ProductIngestion) -> Tuple[bool, str, Optional[Dict]]:
+        """
+        Validate the primary image URL for a product.
+        Uses quick HTTP HEAD check during ingestion.
+
+        Args:
+            product: Product to validate
+
+        Returns:
+            Tuple of (is_valid, status, metadata)
+        """
+        # Determine primary image URL
+        primary_url = product.merchant_image_url or product.aw_image_url or product.large_image
+
+        if not primary_url:
+            return False, "no_image", None
+
+        # Perform quick HTTP HEAD validation
+        is_valid, error_msg, metadata = await ImageValidator.validate_image_url_accessibility(primary_url)
+
+        if is_valid:
+            return True, "valid", metadata
+        else:
+            return False, "invalid_url", {'error': error_msg, 'metadata': metadata}
     
     def _deduplicate_batch(
         self,
@@ -490,7 +541,28 @@ class CSVIngestionPipeline:
     ):
         """Insert a new product."""
         product_id = str(uuid4())
-        
+
+        # Extract image validation data
+        image_validation_status = getattr(product, 'image_validation_status', None)
+        image_validation_metadata = getattr(product, 'image_validation_metadata', None)
+
+        # Determine validation flags
+        image_url_validated = image_validation_status is not None
+        image_validated_at = datetime.now() if image_url_validated else None
+
+        # Extract dimensions if available
+        image_dimensions = None
+        validation_error = None
+
+        if image_validation_metadata:
+            if image_validation_status == 'valid' and 'width' in image_validation_metadata:
+                image_dimensions = {
+                    'width': image_validation_metadata.get('width'),
+                    'height': image_validation_metadata.get('height')
+                }
+            elif 'error' in image_validation_metadata:
+                validation_error = image_validation_metadata['error']
+
         session.execute(
             text("""
                 INSERT INTO products (
@@ -501,7 +573,9 @@ class CSVIngestionPipeline:
                     merchant_image_url, aw_image_url, alternate_images,
                     fashion_category, fashion_size, colour,
                     in_stock, stock_quantity,
-                    quality_score, product_hash, is_active
+                    quality_score, product_hash, is_active,
+                    image_url_validated, image_validation_status,
+                    image_validation_error, image_validated_at, image_dimensions
                 ) VALUES (
                     :id, :merchant_product_id, :merchant_id, :product_name,
                     :merchant_name, :aw_product_id, :brand_name, :brand_id,
@@ -510,7 +584,9 @@ class CSVIngestionPipeline:
                     :merchant_image_url, :aw_image_url, :alternate_images,
                     :fashion_category, :fashion_size, :colour,
                     :in_stock, :stock_quantity,
-                    :quality_score, :product_hash, :is_active
+                    :quality_score, :product_hash, :is_active,
+                    :image_url_validated, :image_validation_status,
+                    :image_validation_error, :image_validated_at, CAST(:image_dimensions AS jsonb)
                 )
             """),
             {
@@ -539,7 +615,12 @@ class CSVIngestionPipeline:
                 'stock_quantity': product.stock_quantity,
                 'quality_score': product.quality_score,
                 'product_hash': product.dedup_hash,
-                'is_active': True
+                'is_active': True,
+                'image_url_validated': image_url_validated,
+                'image_validation_status': image_validation_status,
+                'image_validation_error': validation_error,
+                'image_validated_at': image_validated_at,
+                'image_dimensions': json.dumps(image_dimensions) if image_dimensions else None
             }
         )
         

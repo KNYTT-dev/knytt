@@ -271,6 +271,20 @@ class Product(Base):
     is_nsfw = Column(Boolean, nullable=False, server_default='false')
     quality_score = Column(Float, nullable=False, server_default='0.0')
 
+    # Image validation
+    image_url_validated = Column(Boolean, nullable=False, server_default='false',
+                                 comment='Whether image URL has been validated (HTTP HEAD check)')
+    image_content_validated = Column(Boolean, nullable=False, server_default='false',
+                                    comment='Whether image content has been validated (PIL integrity check)')
+    image_validation_status = Column(String(50), nullable=True,
+                                    comment='Validation status: pending, valid, invalid_url, invalid_content, unreachable')
+    image_validation_error = Column(Text, nullable=True,
+                                   comment='Error message if validation failed')
+    image_validated_at = Column(TIMESTAMP, nullable=True,
+                               comment='When image was last validated')
+    image_dimensions = Column(JSONB, nullable=True,
+                             comment='Image dimensions: {width: int, height: int}')
+
     # Deduplication
     product_hash = Column(String(64), nullable=True, index=True)
     canonical_product_id = Column(PGUUID(as_uuid=True), ForeignKey('products.id', ondelete='SET NULL'), nullable=True)
