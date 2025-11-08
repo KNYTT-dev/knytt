@@ -8,9 +8,10 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 # Get database URL from environment
+# Default to local Supabase PostgreSQL
 DATABASE_URL = os.getenv(
     'DATABASE_URL',
-    'postgresql://greenthumb:greenthumb_pass@localhost:5432/greenthumb'
+    'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
 )
 
 # Create engine
