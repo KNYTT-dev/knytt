@@ -1,0 +1,73 @@
+# Dockerfile for Knytt Celery Worker
+# Optimized for ML workloads with CLIP embeddings
+
+FROM python:3.11-slim as base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    C_FORCE_ROOT=true
+
+WORKDIR /app
+
+# Install system dependencies including ML libs
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    git \
+    curl \
+    libpq-dev \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# =====================================================
+# Dependencies Stage
+# =====================================================
+FROM base as dependencies
+
+# Copy requirements (including ML dependencies)
+COPY requirements.txt .
+COPY requirements-ml.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-ml.txt
+
+# Download CLIP model weights (cache them in the image)
+RUN python -c "import clip; clip.load('ViT-B/32', device='cpu')"
+
+# =====================================================
+# Production Stage
+# =====================================================
+FROM base as production
+
+# Copy installed packages from dependencies stage
+COPY --from=dependencies /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=dependencies /usr/local/bin /usr/local/bin
+COPY --from=dependencies /root/.cache/clip /root/.cache/clip
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+
+# Copy application code
+COPY --chown=appuser:appuser backend/ /app/backend/
+COPY --chown=appuser:appuser models/ /app/models/
+COPY --chown=appuser:appuser workers/ /app/workers/
+
+# Switch to non-root user
+USER appuser
+
+# Cloud Run requires a port even for workers
+EXPOSE 8080
+
+# Run a simple HTTP server for health checks alongside Celery worker
+# In production, you'd run this with a process manager like supervisord
+CMD python -m celery -A backend.tasks.celery_app worker \
+    --loglevel=info \
+    --concurrency=2 \
+    --max-tasks-per-child=10 \
+    --time-limit=900 \
+    --soft-time-limit=840

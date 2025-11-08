@@ -1,0 +1,20 @@
+# Terraform Variables for Knytt Deployment
+# Copy this file to terraform.tfvars and fill in your values
+
+# GCP Configuration
+project_id  = "your-gcp-project-id"
+region      = "us-central1"
+environment = "dev"  # dev, staging, or prod
+
+# Supabase Configuration
+supabase_url         = "https://your-project.supabase.co"
+supabase_service_key = "your-service-role-key"
+supabase_anon_key    = "your-anon-key"
+
+# Docker Images (update after building)
+api_image    = "gcr.io/your-gcp-project-id/knytt-api:latest"
+worker_image = "gcr.io/your-gcp-project-id/knytt-worker:latest"
+
+# Redis Configuration (optional - will be created by Terraform)
+# redis_host = ""
+# redis_port = "6379"
