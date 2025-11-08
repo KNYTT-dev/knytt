@@ -1,28 +1,61 @@
-# ML/AI Dependencies for Knytt
-# Separate file for ML workers to keep API container lean
+# GreenThumb ML Dependencies
+# Install with: pip install -r requirements-ml.txt
+# Requires: Python 3.8+
 
-# Core ML Libraries
-numpy>=1.26.0,<2.0.0
-scipy>=1.11.0
-scikit-learn>=1.3.0
+# Include core requirements
+-r requirements.txt
 
-# CLIP for embeddings
-torch>=2.1.0,<3.0.0
-torchvision>=0.16.0
-ftfy>=6.1.0
-regex>=2023.10.0
-tqdm>=4.66.0
-git+https://github.com/openai/CLIP.git
+# ============================================
+# Core ML Frameworks
+# ============================================
+torch>=2.1.0,<2.3.0
+torchvision>=0.16.0,<0.18.0
 
+# ============================================
+# Embedding Models
+# ============================================
+# SigLIP/CLIP models for multimodal embeddings
+open-clip-torch>=2.24.0
+
+# Sentence transformers for text-only embeddings (optional for MVP)
+sentence-transformers>=2.3.0
+
+# ============================================
+# Vector Search & Indexing
+# ============================================
+# FAISS for fast approximate nearest neighbor search
+# Use faiss-gpu if you have CUDA-compatible GPU
+faiss-cpu>=1.7.4
+# faiss-gpu>=1.7.4  # Uncomment if using GPU
+
+# ============================================
 # Image Processing
+# ============================================
 Pillow>=10.0.0
-opencv-python-headless>=4.8.0
+pillow-heif>=0.13.0  # For HEIC/HEIF image support
 
-# Vector Search
-faiss-cpu>=1.7.4  # Use faiss-gpu if you have GPU instances
+# ============================================
+# Data Processing (ML-specific)
+# ============================================
+# Already in requirements.txt but ensuring versions:
+# numpy>=1.24.0
+# pandas>=2.1.0
 
-# Text Processing
-sentence-transformers>=2.2.0
+# ============================================
+# Caching & Performance
+# ============================================
+redis>=5.0.0  # Redis client for caching embeddings
 
-# Data Processing
-pandas>=2.1.0
+# ============================================
+# Utilities
+# ============================================
+tqdm>=4.66.0  # Progress bars for batch processing
+h5py>=3.10.0  # For storing large embedding arrays
+
+# ============================================
+# Optional: Advanced Features (Post-MVP)
+# ============================================
+# transformers>=4.36.0  # For custom model fine-tuning
+# datasets>=2.15.0  # Hugging Face datasets
+# accelerate>=0.25.0  # Distributed training
+# bitsandbytes>=0.41.0  # 8-bit optimization

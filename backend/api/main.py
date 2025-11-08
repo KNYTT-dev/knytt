@@ -1,171 +1,152 @@
 """
-Knytt FastAPI Backend
-Minimal version for local development
+FastAPI Main Application
+Entry point for the GreenThumb ML API.
 """
-from fastapi import FastAPI, HTTPException
+
+import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from supabase import create_client, Client
-from pydantic import BaseModel
-from typing import List, Optional
-import sys
-from pathlib import Path
+from fastapi.middleware.gzip import GZipMiddleware
 
-# Add parent directory to path so we can import config
-sys.path.append(str(Path(__file__).parent.parent.parent))
+from .config import get_settings
+from .errors import setup_error_handlers
+from .middleware import RequestLoggingMiddleware, RequestTimingMiddleware
+from .routers import health_router, search_router, recommend_router, feedback_router, admin_router, auth_router, users_router
+from ..ml.retrieval import get_index_manager
 
-from backend.config.settings import get_settings
-
-# Get settings
-settings = get_settings()
-
-# Initialize FastAPI
-app = FastAPI(
-    title="Knytt API",
-    description="AI-Powered Product Discovery Platform",
-    version="0.1.0",
-    debug=settings.debug
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins.split(","),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Initialize Supabase client
-supabase: Client = create_client(
-    settings.supabase_url,
-    settings.supabase_service_key
-)
+logger = logging.getLogger(__name__)
 
 
-# =====================================================
-# Pydantic Models
-# =====================================================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifespan handler.
 
-class Product(BaseModel):
-    """Product model"""
-    title: str
-    description: Optional[str] = None
-    price: Optional[float] = None
-    category: Optional[str] = None
-    brand: Optional[str] = None
-    image_url: Optional[str] = None
-    in_stock: bool = True
+    Runs on startup and shutdown to initialize/cleanup resources.
+    """
+    # Startup
+    logger.info("Starting GreenThumb ML API...")
 
+    settings = get_settings()
 
-class HealthResponse(BaseModel):
-    """Health check response"""
-    status: str
-    environment: str
-    supabase_connected: bool
-
-
-# =====================================================
-# Routes
-# =====================================================
-
-@app.get("/")
-async def root():
-    """Root endpoint"""
-    return {
-        "message": "Welcome to Knytt API",
-        "version": "0.1.0",
-        "docs": "/docs"
-    }
-
-
-@app.get("/health", response_model=HealthResponse)
-async def health_check():
-    """Health check endpoint"""
-
-    # Test Supabase connection
-    supabase_connected = False
+    # Load FAISS index on startup
     try:
-        # Try to query the products table
-        response = supabase.table("products").select("count").execute()
-        supabase_connected = True
-    except Exception as e:
-        print(f"Supabase connection failed: {e}")
+        logger.info("Loading FAISS index...")
+        index_manager = get_index_manager()
+        index_manager.ensure_index_loaded()
 
-    return HealthResponse(
-        status="healthy" if supabase_connected else "degraded",
-        environment=settings.environment,
-        supabase_connected=supabase_connected
+        stats = index_manager.get_stats()
+        logger.info(
+            f"FAISS index loaded: {stats.get('num_vectors', 0)} vectors, "
+            f"type={stats.get('index_type', 'unknown')}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to load FAISS index: {e}")
+        logger.warning("API will start but search functionality may be limited")
+
+    logger.info("GreenThumb ML API started successfully")
+
+    yield
+
+    # Shutdown
+    logger.info("Shutting down GreenThumb ML API...")
+
+
+def create_app() -> FastAPI:
+    """
+    Create and configure FastAPI application.
+
+    Returns:
+        Configured FastAPI application instance
+    """
+    settings = get_settings()
+
+    # Create FastAPI app
+    app = FastAPI(
+        title=settings.app_name,
+        description=settings.description,
+        version=settings.version,
+        lifespan=lifespan,
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json"
     )
 
+    # Set up CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=settings.cors_allow_credentials,
+        allow_methods=settings.cors_allow_methods,
+        allow_headers=settings.cors_allow_headers,
+    )
 
-@app.get("/api/v1/products", response_model=List[dict])
-async def get_products(limit: int = 10):
-    """Get all products"""
-    try:
-        response = supabase.table("products").select("*").limit(limit).execute()
-        return response.data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # Add GZip compression
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+    # Add custom middleware
+    app.add_middleware(RequestTimingMiddleware)
+    app.add_middleware(RequestLoggingMiddleware)
 
-@app.post("/api/v1/products", response_model=dict)
-async def create_product(product: Product):
-    """Create a new product"""
-    try:
-        response = supabase.table("products").insert(product.dict()).execute()
-        return response.data[0] if response.data else {}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # Set up error handlers
+    setup_error_handlers(app)
 
+    # Include routers
+    app.include_router(health_router)
+    app.include_router(auth_router)  # Auth router (for /api/v1/auth endpoints)
+    app.include_router(users_router)  # User endpoints (favorites, history, stats)
+    app.include_router(search_router)
+    app.include_router(recommend_router)
+    app.include_router(feedback_router)
+    app.include_router(admin_router)
 
-@app.get("/api/v1/products/{product_id}", response_model=dict)
-async def get_product(product_id: str):
-    """Get a single product by ID"""
-    try:
-        response = supabase.table("products").select("*").eq("id", product_id).execute()
-
-        if not response.data:
-            raise HTTPException(status_code=404, detail="Product not found")
-
-        return response.data[0]
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return app
 
 
-@app.get("/api/v1/stats")
-async def get_stats():
-    """Get database statistics"""
-    try:
-        # Count products
-        products_response = supabase.table("products").select("id", count="exact").execute()
-        products_count = products_response.count if hasattr(products_response, 'count') else 0
+# Create app instance
+app = create_app()
 
-        # Count users (from user_profiles)
-        users_response = supabase.table("user_profiles").select("id", count="exact").execute()
-        users_count = users_response.count if hasattr(users_response, 'count') else 0
 
-        return {
-            "products": products_count,
-            "users": users_count,
-            "database": "connected",
-            "version": "0.1.0"
+# Root endpoint
+@app.get("/")
+async def root():
+    """
+    Root endpoint.
+
+    Returns:
+        API information
+    """
+    settings = get_settings()
+
+    return {
+        "name": settings.app_name,
+        "version": settings.version,
+        "description": settings.description,
+        "endpoints": {
+            "health": "/health",
+            "status": "/status",
+            "metrics": "/metrics",
+            "docs": "/docs",
+            "redoc": "/redoc"
         }
-    except Exception as e:
-        return {
-            "products": 0,
-            "users": 0,
-            "database": "error",
-            "error": str(e)
-        }
+    }
 
 
 if __name__ == "__main__":
     import uvicorn
+
+    settings = get_settings()
+
     uvicorn.run(
-        "main:app",
-        host=settings.api_host,
-        port=settings.api_port,
-        reload=settings.debug
+        "backend.api.main:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.reload,
+        log_level=settings.log_level.lower()
     )

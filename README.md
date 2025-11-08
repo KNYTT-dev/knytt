@@ -1,469 +1,365 @@
-# Knytt
+# GreenThumb Discovery MVP
 
-**AI-Powered E-Commerce Product Discovery Platform**
+A production-ready data ingestion and discovery platform designed to handle CSV data ingestion, validation, deduplication, and storage for 300k+ products, with future capabilities for embeddings and semantic search.
 
-Knytt is a modern product discovery platform that uses machine learning and semantic search to provide personalized product recommendations. Built with Supabase, GCP Cloud Run, and Cloudflare for maximum performance and scalability.
+## 🌟 Features
 
-![Architecture](https://img.shields.io/badge/Architecture-Hybrid-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Python](https://img.shields.io/badge/Python-3.11+-blue)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)
+- **Data Ingestion Pipeline**: Robust CSV parsing with validation and deduplication
+- **REST API**: FastAPI-based API for product data access
+- **Database Management**: PostgreSQL with Alembic migrations
+- **Data Transformations**: DBT for data modeling and transformations
+- **Async Task Processing**: Celery for background jobs
+- **Production Ready**: Docker containerization, comprehensive testing, CI/CD
+- **Future Ready**: Structured for vector embeddings and semantic search
 
----
+## 📋 Requirements
 
-## 🚀 Features
-
-### Core Features
-- **Semantic Search** - Find products using natural language queries
-- **Personalized Recommendations** - ML-powered suggestions based on user behavior
-- **Vector Similarity** - CLIP embeddings for visual and text-based search
-- **Real-time Updates** - Live product catalog updates
-- **User Profiles** - Track preferences and interaction history
-- **Smart Filtering** - Filter by category, price, availability, and quality
-
-### Technical Features
-- **PostgreSQL + pgvector** - Native vector storage and similarity search
-- **Hybrid Architecture** - Supabase for data, GCP for compute
-- **Scalable ML** - FAISS indices for fast similarity search
-- **Background Workers** - Celery for async embedding generation
-- **Modern Frontend** - Next.js 16 with React Server Components
-- **Edge CDN** - Cloudflare for global distribution
-- **Type-Safe** - End-to-end TypeScript + Python type hints
-
----
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────┐
-│         Cloudflare (CDN + WAF + DNS)            │
-└────────────┬────────────────────────┬───────────┘
-             │                        │
-    ┌────────▼────────┐      ┌───────▼────────┐
-    │ Cloudflare Pages│      │  GCP Cloud Run  │
-    │   (Next.js)     │      │    (FastAPI)    │
-    │  - Frontend     │      │  - REST API     │
-    │  - SSR/SSG      │      │  - ML Endpoints │
-    └────────┬────────┘      └────────┬────────┘
-             │                        │
-             └────────┬───────────────┘
-                      │
-         ┌────────────▼─────────────┐
-         │       Supabase           │
-         │ ─────────────────────── │
-         │ PostgreSQL + pgvector    │
-         │ Authentication           │
-         │ Storage (Images/Files)   │
-         │ Realtime Subscriptions   │
-         └──────────────────────────┘
-                      ▲
-                      │
-         ┌────────────┴─────────────┐
-         │   GCP Cloud Run Jobs     │
-         │  ─────────────────────   │
-         │  Celery Workers          │
-         │  - Embedding Generation  │
-         │  - FAISS Index Building  │
-         │  - Data Ingestion        │
-         └──────────────────────────┘
-              ▲              ▲
-              │              │
-    ┌─────────┴────┐   ┌────┴────────┐
-    │ Memorystore  │   │ Cloud       │
-    │ (Redis)      │   │ Storage     │
-    │ - Celery     │   │ - FAISS     │
-    │ - Caching    │   │ - Indices   │
-    └──────────────┘   └─────────────┘
-```
-
----
-
-## 📋 Tech Stack
-
-### Backend
-- **FastAPI** - Modern Python web framework
-- **PostgreSQL 15** - Relational database with pgvector extension
-- **Supabase** - Backend-as-a-Service (Database, Auth, Storage)
-- **Celery** - Distributed task queue
-- **Redis** - Cache and message broker
-
-### Machine Learning
-- **CLIP (OpenAI)** - Vision-language embeddings (512 dimensions)
-- **FAISS** - Facebook AI Similarity Search
-- **scikit-learn** - ML utilities and preprocessing
-- **PyTorch** - Deep learning framework
-
-### Frontend
-- **Next.js 16** - React framework with App Router
-- **React 19** - UI library
-- **TypeScript 5** - Type safety
-- **Tailwind CSS v4** - Utility-first styling
-- **Zustand** - State management
-- **TanStack Query** - Data fetching and caching
-
-### Infrastructure
-- **GCP Cloud Run** - Serverless containers
-- **GCP Memorystore** - Managed Redis
-- **GCP Cloud Storage** - Object storage
-- **Cloudflare Pages** - Static site hosting
-- **Cloudflare CDN** - Global content delivery
-- **Terraform** - Infrastructure as Code
-
----
+- Python 3.11+
+- PostgreSQL 15+
+- Redis 7+
+- Docker & Docker Compose (recommended)
+- Node.js 18+ (for frontend, optional)
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Using Docker (Recommended)
 
-- Node.js 20+
-- Python 3.11+
-- Docker
-- Supabase CLI
-- Google Cloud SDK (for deployment)
+```bash
+# Clone the repository
+git clone <repository-url>
+cd discovery-mvp
+
+# Copy environment variables
+cp .env.example .env
+# Edit .env with your configuration
+
+# Start all services
+make docker-up
+
+# Run database migrations
+make migrate
+
+# Access the API
+open http://localhost:8000/docs
+```
 
 ### Local Development
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/knytt.git
-cd knytt
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# 2. Set up environment variables
+# Install dependencies
+make install-dev
+
+# Set up environment
 cp .env.example .env
-# Edit .env with your values
+# Edit .env with your configuration
 
-# 3. Start Supabase locally
-supabase start
+# Run database migrations
+make migrate
 
-# 4. Run database migrations
-supabase db push
+# Start the development server
+make run-dev
 
-# 5. Install Python dependencies
-pip install -r requirements.txt
-
-# 6. Start the backend
-cd backend
-uvicorn api.main:app --reload
-
-# 7. Install frontend dependencies (in new terminal)
-cd frontend
-npm install
-
-# 8. Start the frontend
-npm run dev
+# In another terminal, start Celery worker
+make celery-worker
 ```
-
-Visit http://localhost:3000 🎉
-
----
-
-## 📦 Deployment
-
-### Option 1: Quick Deploy (15 minutes)
-
-Follow the [Quick Start Guide](./QUICK_START.md) for fastest deployment.
-
-### Option 2: Full Deployment
-
-Follow the comprehensive [Deployment Guide](./DEPLOYMENT_GUIDE.md) for production setup.
-
-### Option 3: Automated CI/CD
-
-Push to `main` branch and GitHub Actions will automatically deploy to:
-- GCP Cloud Run (backend)
-- Cloudflare Pages (frontend)
-- Supabase (database migrations)
-
----
 
 ## 📁 Project Structure
 
 ```
-knytt/
-├── backend/                    # Python backend
-│   ├── api/                    # FastAPI application
-│   │   ├── routers/            # API endpoints
-│   │   ├── models/             # Pydantic models
-│   │   └── main.py             # App entry point
-│   ├── ml/                     # Machine learning modules
-│   │   ├── retrieval/          # Search & ranking
-│   │   ├── user_modeling/      # User embeddings
-│   │   └── model_loader.py     # CLIP model
-│   └── tasks/                  # Celery tasks
-│
-├── frontend/                   # Next.js frontend
-│   ├── src/
-│   │   ├── app/                # App Router pages
-│   │   ├── components/         # React components
-│   │   ├── stores/             # Zustand stores
-│   │   └── types/              # TypeScript types
-│   └── package.json
-│
-├── supabase/                   # Supabase configuration
-│   ├── migrations/             # Database migrations
-│   │   ├── 20250107000001_initial_schema.sql
-│   │   ├── 20250107000002_vector_search_functions.sql
-│   │   └── 20250107000003_storage_setup.sql
-│   └── config.toml             # Supabase config
-│
-├── deployment/                 # Deployment configuration
-│   ├── gcp/                    # Terraform for GCP
-│   │   ├── main.tf
-│   │   └── terraform.tfvars.example
-│   ├── docker/                 # Dockerfiles
-│   │   ├── Dockerfile.api
-│   │   └── Dockerfile.worker
-│   └── scripts/                # Deployment scripts
-│       ├── build-and-push.sh
-│       └── deploy.sh
-│
-├── .github/
-│   └── workflows/
-│       └── deploy.yml          # CI/CD pipeline
-│
-├── requirements.txt            # Python dependencies
-├── requirements-ml.txt         # ML dependencies
-├── .env.example                # Environment variables template
-├── DEPLOYMENT_GUIDE.md         # Full deployment guide
-├── QUICK_START.md              # Quick start guide
-└── README.md                   # This file
+discovery-mvp/
+├── backend/                 # Python backend package
+│   ├── ingestion/          # Data ingestion logic
+│   │   ├── parsers/        # CSV and data parsers
+│   │   ├── validators/     # Data validation
+│   │   └── deduplicators/  # Deduplication logic
+│   ├── models/             # Database models
+│   ├── database/           # Database connection & operations
+│   ├── api/                # REST API endpoints
+│   │   ├── routes/         # API route handlers
+│   │   └── schemas/        # Pydantic schemas
+│   ├── search/             # Search functionality (future)
+│   │   ├── embeddings/     # Vector embeddings
+│   │   └── indices/        # Search indices
+│   └── utils/              # Utility functions
+├── data/                   # Data directories
+│   ├── raw/                # Raw CSV files
+│   ├── processed/          # Processed data
+│   ├── temp/               # Temporary files
+│   ├── test/               # Test data
+│   ├── embeddings/         # Vector embeddings (future)
+│   └── indices/            # Search indices (future)
+├── database/               # Database management
+│   ├── migrations/         # Alembic migrations
+│   ├── schemas/            # Database schemas
+│   ├── seeds/              # Seed data
+│   └── backups/            # Database backups
+├── dbt-project/            # DBT transformations
+│   ├── models/             # DBT models
+│   │   ├── staging/        # Staging models
+│   │   └── marts/          # Business logic models
+│   ├── macros/             # DBT macros
+│   ├── tests/              # DBT tests
+│   └── seeds/              # DBT seed data
+├── tests/                  # Test suite
+│   ├── unit/               # Unit tests
+│   ├── integration/        # Integration tests
+│   └── fixtures/           # Test fixtures
+├── docs/                   # Documentation
+│   ├── api/                # API documentation
+│   ├── architecture/       # Architecture docs
+│   └── deployment/         # Deployment guides
+├── scripts/                # Utility scripts
+│   ├── ingestion/          # Ingestion scripts
+│   ├── maintenance/        # Maintenance scripts
+│   ├── deployment/         # Deployment scripts
+│   └── monitoring/         # Monitoring scripts
+├── frontend/               # Frontend application (future)
+│   └── src/                # React/Next.js source
+├── logs/                   # Application logs
+├── .github/                # GitHub Actions workflows
+├── docker-compose.yml      # Docker services configuration
+├── Dockerfile              # Docker image definition
+├── Makefile               # Development commands
+└── pyproject.toml         # Python project configuration
 ```
 
----
+## 🔧 Development
 
-## 🔑 Key Components
+### Common Commands
 
-### Database Schema
+```bash
+# Install dependencies
+make install-dev
 
-**Main Tables:**
-- `products` - Product catalog with embeddings
-- `user_profiles` - Extended user information
-- `user_embeddings` - User taste profiles (long-term + session)
-- `user_interactions` - Interaction tracking
-- `user_favorites` - Saved products
-- `search_queries` - Search analytics
+# Run tests
+make test
 
-### API Endpoints
+# Run linting
+make lint
 
+# Format code
+make format
+
+# Type check
+make type-check
+
+# Run all quality checks
+make quality
+
+# Start development server
+make run-dev
+
+# Database migrations
+make migrate
+make migrate-create MSG="description"
+
+# Docker commands
+make docker-up
+make docker-down
+make docker-logs
+
+# DBT commands
+make dbt-run
+make dbt-test
+make dbt-docs
 ```
-POST   /api/v1/search              - Semantic product search
-POST   /api/v1/recommend           - Personalized recommendations
-GET    /api/v1/products/{id}       - Get product details
-POST   /api/v1/feedback            - Track user interaction
-GET    /api/v1/similar/{id}        - Similar products
-POST   /api/v1/auth/login          - User login
-POST   /api/v1/auth/register       - User registration
-GET    /health                     - Health check
-```
-
-### Vector Search Functions
-
-Custom PostgreSQL functions using pgvector:
-
-- `match_products()` - Semantic similarity search
-- `get_personalized_recommendations()` - User-based recommendations
-- `get_similar_products()` - Product similarity
-- `search_products_hybrid()` - Hybrid semantic + keyword search
-- `get_trending_products()` - Trending based on interactions
-
----
-
-## 🎯 Use Cases
-
-1. **E-Commerce Discovery** - Help users find products they'll love
-2. **Visual Search** - Find similar products by image
-3. **Personalized Shopping** - Tailored recommendations
-4. **Content Discovery** - Extend to articles, videos, etc.
-5. **Product Recommendations** - Cross-sell and upsell
-
----
-
-## 💰 Cost Estimate
-
-### Development Environment
-- **Total: ~$125/month**
-  - GCP: ~$125
-  - Supabase: Free
-  - Cloudflare: Free
-
-### Production Environment (10k DAU)
-- **Total: ~$655/month**
-  - GCP Cloud Run: $90
-  - GCP Memorystore: $60
-  - GCP Storage: $40
-  - GCP Networking: $100
-  - GCP Misc: $40
-  - Supabase Pro: $25
-  - Cloudflare Pro: $20
-  - Vertex AI (optional): $150
-
-### Scaling (100k DAU)
-- **Total: ~$2000-3000/month**
-  - Primarily increased compute and networking
-
----
-
-## 🛠️ Development
 
 ### Running Tests
 
 ```bash
-# Backend tests
-pytest tests/ --cov=backend
+# Run all tests with coverage
+make test
 
-# Frontend tests
-cd frontend
-npm test
+# Run specific test file
+pytest tests/unit/ingestion/test_parsers.py -v
 
-# E2E tests
-npm run test:e2e
+# Run tests with specific markers
+pytest -m unit          # Unit tests only
+pytest -m integration   # Integration tests only
+pytest -m "not slow"    # Skip slow tests
+
+# Run tests in watch mode
+make test-watch
 ```
 
 ### Code Quality
 
-```bash
-# Python
-black backend/
-isort backend/
-flake8 backend/
-mypy backend/
+This project uses:
+- **Black** for code formatting
+- **isort** for import sorting
+- **flake8** for linting
+- **mypy** for type checking
+- **pytest** for testing
+- **pre-commit** hooks for quality enforcement
 
-# TypeScript
-cd frontend
-npm run lint
-npm run type-check
+```bash
+# Set up pre-commit hooks
+pre-commit install
+
+# Run pre-commit on all files
+make pre-commit
 ```
 
-### Database Migrations
+## 📊 Database
+
+### Migrations
 
 ```bash
 # Create a new migration
-supabase migration new migration_name
+make migrate-create MSG="add products table"
 
 # Apply migrations
-supabase db push
+make migrate
 
-# Reset database (local only)
-supabase db reset
+# Rollback one migration
+make migrate-downgrade
+
+# View migration history
+make migrate-history
 ```
 
----
+### DBT Transformations
 
-## 🔐 Security
+```bash
+# Run DBT models
+make dbt-run
 
-- ✅ Row Level Security (RLS) enabled on all tables
-- ✅ JWT-based authentication via Supabase
-- ✅ API keys stored in Secret Manager
-- ✅ HTTPS only (enforced by Cloudflare)
-- ✅ WAF and DDoS protection (Cloudflare)
-- ✅ Rate limiting on API endpoints
-- ✅ Input validation with Pydantic
-- ✅ SQL injection prevention via SQLAlchemy ORM
+# Run DBT tests
+make dbt-test
 
----
+# Generate and view DBT docs
+make dbt-docs
+```
 
-## 📊 Monitoring
+## 🐳 Docker
 
-### Available Metrics
+### Services
 
-- **GCP Cloud Monitoring**: CPU, memory, requests, latency
-- **Supabase Dashboard**: Database performance, API usage
-- **Cloudflare Analytics**: Traffic, security events, performance
+- **postgres**: PostgreSQL database (port 5432)
+- **redis**: Redis cache (port 6379)
+- **api**: FastAPI application (port 8000)
+- **celery-worker**: Celery worker for async tasks
+- **celery-beat**: Celery beat for scheduled tasks
 
-### Logs
+### Commands
 
-- **Application logs**: Cloud Logging (GCP)
-- **Database logs**: Supabase dashboard
-- **Edge logs**: Cloudflare (Pro plan)
+```bash
+# Start all services
+docker-compose up -d
 
----
+# View logs
+docker-compose logs -f api
 
-## 🤝 Contributing
+# Access API container shell
+docker-compose exec api /bin/bash
 
-Contributions are welcome! Please:
+# Access database
+docker-compose exec postgres psql -U postgres -d greenthumb_dev
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+# Stop all services
+docker-compose down
 
-### Development Guidelines
+# Clean up everything
+docker-compose down -v --rmi all
+```
 
-- Write tests for new features
-- Follow existing code style
-- Update documentation
-- Keep commits atomic and well-described
+## 📈 API Documentation
 
----
+Once the server is running, visit:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-## 📝 License
+## 🧪 Testing
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The project follows pytest conventions with comprehensive test coverage:
 
----
+```bash
+# Run all tests
+pytest
 
-## 🙏 Acknowledgments
+# Run with coverage report
+pytest --cov=backend --cov-report=html
 
-- **OpenAI** - CLIP model for embeddings
-- **Supabase** - Amazing backend platform
-- **Vercel** - Next.js framework
-- **Facebook AI** - FAISS library
-- **Cloudflare** - Edge infrastructure
+# Run specific test types
+pytest -m unit
+pytest -m integration
+pytest -m "not slow"
 
----
+# Run in parallel
+pytest -n auto
+```
+
+## 📝 Environment Variables
+
+Key environment variables (see `.env.example` for full list):
+
+```bash
+# Application
+APP_ENV=development
+DEBUG=true
+
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/dbname
+
+# API
+API_HOST=0.0.0.0
+API_PORT=8000
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+```
+
+## 🚢 Deployment
+
+See [docs/deployment/README.md](docs/deployment/README.md) for detailed deployment instructions.
+
+### Production Checklist
+
+- [ ] Set production environment variables
+- [ ] Configure database connection
+- [ ] Set up database backups
+- [ ] Configure logging and monitoring
+- [ ] Set up SSL/TLS certificates
+- [ ] Configure rate limiting
+- [ ] Set up error tracking (Sentry)
+- [ ] Review security settings
 
 ## 📚 Documentation
 
-- [Quick Start Guide](./QUICK_START.md) - Get started in 15 minutes
-- [Deployment Guide](./DEPLOYMENT_GUIDE.md) - Comprehensive deployment instructions
-- [API Documentation](./docs/API.md) - API reference (auto-generated)
-- [Architecture](./docs/ARCHITECTURE.md) - System design details
+- [API Documentation](docs/api/README.md)
+- [Architecture Overview](docs/architecture/README.md)
+- [Deployment Guide](docs/deployment/README.md)
+
+## 🤝 Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Run quality checks: `make quality`
+4. Submit a pull request
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 🔮 Future Enhancements
+
+- [ ] Vector embeddings generation
+- [ ] Semantic search capabilities
+- [ ] Frontend application
+- [ ] API authentication & authorization
+- [ ] Advanced analytics dashboard
+- [ ] Real-time data ingestion
+- [ ] Multi-source data ingestion
+
+## 📞 Support
+
+For questions and support, please open an issue in the repository.
 
 ---
 
-## 🐛 Issues & Support
+Built with ❤️ by the GreenThumb Team
 
-- **Bug reports**: [GitHub Issues](https://github.com/your-username/knytt/issues)
-- **Feature requests**: [GitHub Discussions](https://github.com/your-username/knytt/discussions)
-- **Questions**: [Stack Overflow](https://stackoverflow.com/questions/tagged/knytt)
-
----
-
-## 🗺️ Roadmap
-
-### Phase 1 (Current) ✅
-- ✅ Core search and recommendations
-- ✅ User authentication
-- ✅ Product ingestion pipeline
-- ✅ Vector similarity search
-- ✅ Basic UI
-
-### Phase 2 (In Progress)
-- 🚧 Social features (likes, shares, follows)
-- 🚧 Advanced filtering
-- 🚧 Mobile app (React Native)
-- 🚧 Admin dashboard
-
-### Phase 3 (Planned)
-- 📋 Fine-tuned CLIP model
-- 📋 Multi-modal search (image + text)
-- 📋 Collaborative filtering
-- 📋 A/B testing framework
-- 📋 Analytics dashboard
-
-### Phase 4 (Future)
-- 💭 AR/VR product visualization
-- 💭 Voice search
-- 💭 Multi-language support
-- 💭 Marketplace features
-
----
-
-## 🌟 Star History
-
-If you find this project useful, please consider giving it a star ⭐
-
----
-
-Made with ❤️ by the Knytt team
