@@ -41,9 +41,9 @@ export default function ProductDetailPage() {
 
   // Track product view on page load
   useEffect(() => {
-    if (productId && user) {
+    if (productId && user?.id) {
       feedbackMutation.mutate({
-        user_id: user.id,
+        user_id: Number(user.id),
         product_id: productId,
         interaction_type: InteractionType.VIEW,
       });

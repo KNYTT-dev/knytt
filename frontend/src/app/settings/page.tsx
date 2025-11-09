@@ -22,7 +22,8 @@ type TabType = "profile" | "preferences" | "stats";
 export default function SettingsPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: stats, isLoading: statsLoading } = useUserStats();
+  const userId = user?.id ? Number(user.id) : undefined;
+  const { data: stats, isLoading: statsLoading } = useUserStats(userId);
   const updatePreferences = useUpdatePreferences();
 
   const [activeTab, setActiveTab] = useState<TabType>("profile");
@@ -37,10 +38,14 @@ export default function SettingsPage() {
   }
 
   const handleSavePreferences = () => {
+    if (!userId) return;
     updatePreferences.mutate({
-      preferred_categories: preferredCategories.length > 0 ? preferredCategories : undefined,
-      price_band_min: priceMin ? parseFloat(priceMin) : undefined,
-      price_band_max: priceMax ? parseFloat(priceMax) : undefined,
+      userId,
+      preferences: {
+        preferred_categories: preferredCategories.length > 0 ? preferredCategories : undefined,
+        price_band_min: priceMin ? parseFloat(priceMin) : undefined,
+        price_band_max: priceMax ? parseFloat(priceMax) : undefined,
+      },
     });
   };
 

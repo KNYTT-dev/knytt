@@ -12,7 +12,7 @@ export default function FeedPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const { data: feedData, isLoading: feedLoading } = useFeed(
-    user?.id ? parseInt(user.id.toString()) : undefined,
+    user?.id ? Number(user.id) : undefined,
     {
       limit: 20,
       use_session_context: true,
