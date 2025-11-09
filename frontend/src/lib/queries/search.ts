@@ -49,11 +49,11 @@ export function useSearch(
 export function useInfiniteSearch(
   baseRequest: Omit<SearchRequest, "offset">,
   options?: Omit<
-    UseInfiniteQueryOptions<SearchResponse>,
+    UseInfiniteQueryOptions<SearchResponse, Error, any, any, number>,
     "queryKey" | "queryFn" | "initialPageParam" | "getNextPageParam"
   >
 ) {
-  return useInfiniteQuery({
+  return useInfiniteQuery<SearchResponse, Error, any, any, number>({
     queryKey: ["search", "infinite", baseRequest],
     queryFn: async ({ pageParam }: { pageParam: number }): Promise<SearchResponse> => {
       const request: SearchRequest = {

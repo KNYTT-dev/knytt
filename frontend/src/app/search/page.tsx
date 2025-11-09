@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
-import type { InfiniteData } from "@tanstack/react-query";
 import { SearchBar } from "@/components/search";
 import { ProductGrid } from "@/components/products";
 import { useInfiniteSearch } from "@/lib/queries/search";
 import { useAuth } from "@/lib/queries/auth";
-import type { SearchResponse } from "@/types";
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,7 +18,7 @@ export default function SearchPage() {
 
   // Use infinite search hook for pagination
   const {
-    data: infiniteData,
+    data,
     isLoading,
     error,
     fetchNextPage,
@@ -36,9 +34,6 @@ export default function SearchPage() {
     }
   );
 
-  // infiniteData is already properly typed from useInfiniteQuery
-  const data = infiniteData;
-
   // Auto-fetch next page when in view
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
@@ -52,10 +47,10 @@ export default function SearchPage() {
   };
 
   // Flatten all pages into single array
-  const allProducts = data?.pages?.flatMap((page) => page.results) ?? [];
-  const totalResults = data?.pages?.[0]?.total ?? 0;
-  const searchTime = data?.pages?.[0]?.search_time_ms ?? 0;
-  const isPersonalized = data?.pages?.[0]?.personalized ?? false;
+  const allProducts = (data as any)?.pages?.flatMap((page: any) => page.results) ?? [];
+  const totalResults = (data as any)?.pages?.[0]?.total ?? 0;
+  const searchTime = (data as any)?.pages?.[0]?.search_time_ms ?? 0;
+  const isPersonalized = (data as any)?.pages?.[0]?.personalized ?? false;
 
   return (
     <div className="min-h-screen bg-ivory">
