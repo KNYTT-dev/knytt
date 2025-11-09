@@ -4,6 +4,7 @@
 
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { RecommendRequest, RecommendResponse } from "@/types/api";
+import { RecommendationContext } from "@/types/enums";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
@@ -19,7 +20,7 @@ export function useFeed(
     queryFn: async (): Promise<RecommendResponse> => {
       const request: RecommendRequest = {
         user_id: userId!,
-        context: "feed",
+        context: RecommendationContext.FEED,
         limit: 20,
       };
 
@@ -58,7 +59,7 @@ export function useSimilarProducts(
     queryFn: async (): Promise<RecommendResponse> => {
       const request: RecommendRequest = {
         user_id: userId!,
-        context: "similar",
+        context: RecommendationContext.SIMILAR,
         product_id: productId!,
         limit: 12,
       };
