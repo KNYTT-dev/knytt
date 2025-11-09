@@ -25,6 +25,7 @@ export default function ProductDetailPage() {
   const feedbackMutation = useTrackInteraction();
   const [product, setProduct] = useState<ProductResult | null>(null);
   const { user } = useAuth();
+  const userId = user?.id ? Number(user.id) : undefined;
 
   // Try to fetch product via search (temporary solution)
   // We search with a very specific query to try to get this product
@@ -179,14 +180,14 @@ export default function ProductDetailPage() {
               {/* Actions */}
               <ProductActions
                 productId={product.product_id}
-                userId={user?.id}
+                userId={userId}
                 inStock={product.in_stock}
               />
             </div>
           </div>
 
           {/* Similar Products */}
-          <SimilarProducts productId={product.product_id} userId={user?.id} />
+          <SimilarProducts productId={product.product_id} userId={userId} />
         </main>
       )}
     </div>

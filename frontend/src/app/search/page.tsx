@@ -13,6 +13,7 @@ export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const { user } = useAuth();
+  const userId = user?.id ? Number(user.id) : undefined;
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0,
   });
@@ -115,7 +116,7 @@ export default function SearchPage() {
 
             <ProductGrid
               products={allProducts}
-              userId={user?.id}
+              userId={userId}
               columns={4}
               onProductClick={(productId) => {
                 console.log("Product clicked:", productId);
