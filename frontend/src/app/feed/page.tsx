@@ -10,10 +10,9 @@ import Link from "next/link";
 export default function FeedPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const userId = user?.id ? Number(user.id) : undefined;
 
-  const { data: feedData, isLoading: feedLoading } = useFeed(
-    user?.id ? Number(user.id) : undefined
-  );
+  const { data: feedData, isLoading: feedLoading } = useFeed(userId);
 
   // Redirect to login if not authenticated
   if (!authLoading && !isAuthenticated) {
@@ -149,7 +148,7 @@ export default function FeedPage() {
           <RecommendationCarousel
             title="Recommended for You"
             products={feedData.results}
-            userId={user?.id}
+            userId={userId}
             context="personalized_feed"
           />
         ) : (
