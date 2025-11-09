@@ -36,7 +36,7 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir -r requirements-ml.txt
 
 # Download CLIP model weights (cache them in the image)
-RUN python -c "import clip; clip.load('ViT-B/32', device='cpu')"
+RUN python -c "import open_clip; open_clip.create_model_and_transforms('ViT-B-32', pretrained='openai')"
 
 # =====================================================
 # Production Stage
