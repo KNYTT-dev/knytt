@@ -11,7 +11,7 @@ import { InteractionType } from "@/types/enums";
 export default function FavoritesPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: favorites, isLoading: favoritesLoading } = useFavorites(user?.id);
+  const { data: favorites, isLoading: favoritesLoading } = useFavorites(user?.id ? Number(user.id) : undefined);
   const removeFavorite = useRemoveFavorite();
   const feedbackMutation = useTrackInteraction();
 

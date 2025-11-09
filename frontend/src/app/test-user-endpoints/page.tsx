@@ -12,9 +12,10 @@ import { useState } from "react";
 
 export default function TestUserEndpointsPage() {
   const { user, isAuthenticated } = useAuth();
-  const { data: favorites, isLoading: favoritesLoading } = useFavorites(user?.id);
-  const { data: stats, isLoading: statsLoading } = useUserStats(user?.id);
-  const { data: history, isLoading: historyLoading } = useInteractionHistory(user?.id);
+  const userId = user?.id ? Number(user.id) : undefined;
+  const { data: favorites, isLoading: favoritesLoading } = useFavorites(userId);
+  const { data: stats, isLoading: statsLoading } = useUserStats(userId);
+  const { data: history, isLoading: historyLoading } = useInteractionHistory(userId);
 
   const updatePreferences = useUpdatePreferences();
   const removeFavorite = useRemoveFavorite();
