@@ -6,7 +6,7 @@ Settings and configuration for FastAPI application.
 import os
 import json
 from typing import List, Optional, Any
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, field_validator
 
 
@@ -31,7 +31,7 @@ class APISettings(BaseSettings):
     # CORS settings
     cors_origins: List[str] = Field(
         default=["http://localhost:3000", "http://localhost:8080"],
-        env="API_CORS_ORIGINS"
+        alias="API_CORS_ORIGINS"
     )
     cors_allow_credentials: bool = True
     cors_allow_methods: List[str] = ["*"]
@@ -97,11 +97,15 @@ class APISettings(BaseSettings):
                 return [origin.strip() for origin in v.split(",")]
         return v
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-        extra = "ignore"  # Ignore extra fields in .env file
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore",  # Ignore extra fields in .env file
+        env_prefix="",  # No prefix for environment variables
+        validate_default=True,
+        populate_by_name=True  # Allow using both field name and alias for env vars
+    )
 
 
 # Global settings instance
