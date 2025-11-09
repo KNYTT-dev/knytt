@@ -32,15 +32,20 @@ export default function TestUserEndpointsPage() {
   }
 
   const handleUpdatePreferences = () => {
+    if (!userId) return;
     updatePreferences.mutate({
-      preferred_categories: [testCategory, "accessories"],
-      price_band_min: 10,
-      price_band_max: 500,
+      userId,
+      preferences: {
+        preferred_categories: [testCategory, "accessories"],
+        price_band_min: 10,
+        price_band_max: 500,
+      },
     });
   };
 
   const handleRemoveFavorite = (productId: string) => {
-    removeFavorite.mutate(productId);
+    if (!userId) return;
+    removeFavorite.mutate({ userId, productId });
   };
 
   return (
