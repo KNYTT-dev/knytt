@@ -215,11 +215,11 @@ resource "google_service_account" "cloud_run_sa" {
 
 # Grant permissions to access secrets
 resource "google_secret_manager_secret_iam_member" "cloud_run_secrets" {
-  for_each = toset([
-    google_secret_manager_secret.supabase_url.id,
-    google_secret_manager_secret.supabase_service_key.id,
-    google_secret_manager_secret.redis_auth.id,
-  ])
+  for_each = tomap({
+    "supabase-url"         = google_secret_manager_secret.supabase_url.id,
+    "supabase-service-key" = google_secret_manager_secret.supabase_service_key.id,
+    "redis-auth"           = google_secret_manager_secret.redis_auth.id,
+  })
 
   secret_id = each.value
   role      = "roles/secretmanager.secretAccessor"
