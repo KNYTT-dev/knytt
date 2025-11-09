@@ -55,10 +55,10 @@ export function useInfiniteSearch(
 ) {
   return useInfiniteQuery({
     queryKey: ["search", "infinite", baseRequest],
-    queryFn: async ({ pageParam = 0 }): Promise<SearchResponse> => {
+    queryFn: async ({ pageParam }: { pageParam: number }): Promise<SearchResponse> => {
       const request: SearchRequest = {
         ...baseRequest,
-        offset: pageParam,
+        offset: pageParam as number,
       };
 
       const response = await fetch(`${API_URL}/api/v1/search`, {
