@@ -12,12 +12,7 @@ export default function FeedPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const { data: feedData, isLoading: feedLoading } = useFeed(
-    user?.id ? Number(user.id) : undefined,
-    {
-      limit: 20,
-      use_session_context: true,
-      enable_diversity: true,
-    }
+    user?.id ? Number(user.id) : undefined
   );
 
   // Redirect to login if not authenticated
