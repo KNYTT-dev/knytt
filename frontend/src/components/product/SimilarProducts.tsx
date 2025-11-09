@@ -11,9 +11,7 @@ interface SimilarProductsProps {
 
 export function SimilarProducts({ productId, userId }: SimilarProductsProps) {
   // Only fetch if userId is available
-  const { data, isLoading, error } = useSimilarProducts(productId, userId, {
-    limit: 12,
-  });
+  const { data, isLoading, error } = useSimilarProducts(productId, userId);
 
   if (isLoading) {
     return (
