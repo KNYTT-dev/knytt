@@ -35,8 +35,7 @@ COPY requirements-ml.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir -r requirements-ml.txt
 
-# Download CLIP model weights (cache them in the image)
-RUN python -c "import open_clip; open_clip.create_model_and_transforms('ViT-B-32', pretrained='openai')"
+# Note: CLIP models will be downloaded on first use by the application
 
 # =====================================================
 # Production Stage
@@ -46,7 +45,7 @@ FROM base as production
 # Copy installed packages from dependencies stage
 COPY --from=dependencies /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=dependencies /usr/local/bin /usr/local/bin
-COPY --from=dependencies /root/.cache/clip /root/.cache/clip
+# Note: open-clip downloads models to torch hub cache or on first use
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
