@@ -32,9 +32,9 @@ export default function FavoritesPage() {
   const handleAddToCart = (productId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!user?.id) return;
+    if (!userId) return;
     feedbackMutation.mutate({
-      user_id: user.id,
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.ADD_TO_CART,
       context: "favorites",
@@ -42,9 +42,9 @@ export default function FavoritesPage() {
   };
 
   const handleClick = (productId: string) => {
-    if (!user?.id) return;
+    if (!userId) return;
     feedbackMutation.mutate({
-      user_id: user.id,
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.CLICK,
       context: "favorites",
