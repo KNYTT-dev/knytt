@@ -36,8 +36,8 @@ export default function SearchPage() {
     }
   );
 
-  // Cast to proper type for TypeScript
-  const data = infiniteData as InfiniteData<SearchResponse, unknown> | undefined;
+  // infiniteData is already properly typed from useInfiniteQuery
+  const data = infiniteData;
 
   // Auto-fetch next page when in view
   useEffect(() => {
