@@ -28,6 +28,21 @@ import {
 }
 
 import {
+  to = google_secret_manager_secret_version.supabase_url
+  id = "projects/${var.project_id}/secrets/supabase-url-${var.environment}/versions/1"
+}
+
+import {
+  to = google_secret_manager_secret_version.supabase_service_key
+  id = "projects/${var.project_id}/secrets/supabase-service-key-${var.environment}/versions/1"
+}
+
+import {
+  to = google_secret_manager_secret_version.redis_auth
+  id = "projects/${var.project_id}/secrets/redis-auth-${var.environment}/versions/2"
+}
+
+import {
   to = google_service_account.cloud_run_sa
   id = "projects/${var.project_id}/serviceAccounts/knytt-cloud-run-${var.environment}@${var.project_id}.iam.gserviceaccount.com"
 }
