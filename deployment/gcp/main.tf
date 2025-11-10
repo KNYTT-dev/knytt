@@ -291,10 +291,7 @@ resource "google_cloud_run_v2_service" "api" {
         value = var.environment
       }
 
-      env {
-        name  = "PORT"
-        value = "8000"
-      }
+      # Note: PORT is automatically set by Cloud Run
 
       env {
         name = "SUPABASE_URL"
