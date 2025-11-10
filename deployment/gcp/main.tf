@@ -93,18 +93,10 @@ provider "google" {
 # =====================================================
 # ARTIFACT REGISTRY
 # =====================================================
-
-resource "google_artifact_registry_repository" "docker_repo" {
-  location      = var.region
-  repository_id = "knytt-${var.environment}"
-  description   = "Docker repository for Knytt application"
-  format        = "DOCKER"
-
-  labels = {
-    environment = var.environment
-    application = "knytt"
-  }
-}
+# Note: Artifact Registry repository is created manually before Terraform runs
+# This is because the Docker build job needs to push images before Terraform deploys Cloud Run
+# Repository name: knytt-${var.environment}
+# Location: ${var.region}
 
 # =====================================================
 # MEMORYSTORE REDIS (for Celery broker)
