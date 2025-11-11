@@ -34,35 +34,6 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir -r requirements-ml.txt
 
 # =====================================================
-# Model Download Stage
-# =====================================================
-FROM dependencies as model-download
-
-# Copy backend code needed for model download
-COPY backend/ml/config.py /app/backend/ml/config.py
-COPY backend/ml/__init__.py /app/backend/ml/__init__.py
-COPY backend/__init__.py /app/backend/__init__.py
-
-# Create model cache directory
-RUN mkdir -p /app/models/cache/clip
-
-# Pre-download CLIP model to avoid runtime downloads
-# Model: ViT-B-32, Pretrained: openai (~400MB)
-RUN python3 -c "\
-import sys; \
-sys.path.insert(0, '/app'); \
-from pathlib import Path; \
-Path('models/cache/clip').mkdir(parents=True, exist_ok=True); \
-import open_clip; \
-model, _, preprocess = open_clip.create_model_and_transforms(\
-    'ViT-B-32', \
-    pretrained='openai', \
-    cache_dir='models/cache/clip'\
-); \
-print('✓ CLIP model downloaded successfully')\
-"
-
-# =====================================================
 # Production Stage
 # =====================================================
 FROM base as production
@@ -71,16 +42,13 @@ FROM base as production
 COPY --from=dependencies /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=dependencies /usr/local/bin /usr/local/bin
 
-# Copy application code first
-COPY backend/ /app/backend/
-COPY models/ /app/models/
-
-# Copy pre-downloaded models from model-download stage (overwrites empty cache)
-COPY --from=model-download /app/models/cache /app/models/cache
-
-# Create non-root user and set ownership
+# Create non-root user
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app
+
+# Copy application code
+COPY --chown=appuser:appuser backend/ /app/backend/
+COPY --chown=appuser:appuser models/ /app/models/
 
 # Switch to non-root user
 USER appuser
