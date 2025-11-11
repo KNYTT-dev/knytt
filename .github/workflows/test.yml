@@ -86,5 +86,11 @@ jobs:
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/greenthumb_test
         REDIS_URL: redis://localhost:6379/0
-      run: pytest tests/integration/ -v
+      run: |
+        pytest tests/integration/ -v || EXIT_CODE=$?
+        if [ "${EXIT_CODE:-0}" -eq 5 ]; then
+          echo "No integration tests found, skipping"
+          exit 0
+        fi
+        exit ${EXIT_CODE:-0}
 
