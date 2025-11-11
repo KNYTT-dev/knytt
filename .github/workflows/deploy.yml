@@ -156,6 +156,9 @@ jobs:
       contents: read
       id-token: write
 
+    outputs:
+      api_url: ${{ steps.terraform-output.outputs.api_url }}
+
     defaults:
       run:
         working-directory: deployment/gcp
@@ -255,9 +258,9 @@ jobs:
         run: |
           curl -f ${{ needs.deploy-infrastructure.outputs.api_url }}/health || exit 1
 
-      - name: Test API version endpoint
+      - name: Test API root endpoint
         run: |
-          curl -f ${{ needs.deploy-infrastructure.outputs.api_url }}/api/v1/version || exit 1
+          curl -f ${{ needs.deploy-infrastructure.outputs.api_url }}/ || exit 1
 
   # =====================================================
   # Notification
