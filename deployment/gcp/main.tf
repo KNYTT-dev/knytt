@@ -286,6 +286,16 @@ resource "google_cloud_run_v2_service" "api" {
       # Note: PORT is automatically set by Cloud Run
 
       env {
+        name  = "API_CORS_ORIGINS"
+        value = jsonencode([
+          "https://knytt.xyz",
+          "https://www.knytt.xyz",
+          "http://localhost:3000",
+          "http://localhost:8080"
+        ])
+      }
+
+      env {
         name = "SUPABASE_URL"
         value_source {
           secret_key_ref {
