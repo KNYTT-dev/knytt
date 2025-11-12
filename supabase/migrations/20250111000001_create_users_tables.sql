@@ -2,14 +2,13 @@
 -- Adds users, user_embeddings, user_interactions, and task_executions tables
 
 -- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "vector";
 
 -- =====================================================
 -- USERS TABLE (Custom Authentication)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     external_id VARCHAR(255) UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
 
@@ -59,7 +58,7 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
 -- USER EMBEDDINGS TABLE
 -- =====================================================
 CREATE TABLE IF NOT EXISTS user_embeddings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
     -- Embedding type
@@ -104,7 +103,7 @@ CREATE INDEX IF NOT EXISTS idx_user_embeddings_session ON user_embeddings
 -- USER INTERACTIONS TABLE
 -- =====================================================
 CREATE TABLE IF NOT EXISTS user_interactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     -- User and product
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -148,7 +147,7 @@ CREATE INDEX IF NOT EXISTS idx_user_interactions_unprocessed ON user_interaction
 -- TASK EXECUTIONS TABLE
 -- =====================================================
 CREATE TABLE IF NOT EXISTS task_executions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     task_id VARCHAR(255) NOT NULL UNIQUE,
     task_name VARCHAR(255) NOT NULL,
     task_type VARCHAR(100) NOT NULL,
