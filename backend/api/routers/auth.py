@@ -48,6 +48,7 @@ def get_cookie_settings() -> dict:
         "httponly": True,
         "secure": is_production,  # True in production (HTTPS required)
         "samesite": "none" if is_production else "lax",  # "none" allows cross-origin in production
+        "path": "/",  # Explicitly set path to ensure cookie is sent with all requests
     }
 
 
@@ -203,8 +204,9 @@ async def logout(response: Response) -> dict:
     """
     Logout by clearing auth cookies.
     """
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+    cookie_settings = get_cookie_settings()
+    response.delete_cookie("access_token", **cookie_settings)
+    response.delete_cookie("refresh_token", **cookie_settings)
     return {"message": "Successfully logged out"}
 
 
