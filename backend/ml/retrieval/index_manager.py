@@ -6,6 +6,7 @@ Manages FAISS index lifecycle: loading from DB, building, rebuilding, and servin
 from __future__ import annotations
 
 import logging
+import os
 import threading
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -218,7 +219,7 @@ class FAISSIndexManager:
         """
         Ensure FAISS index is loaded and ready.
 
-        Tries to load from disk first, then builds from DB if not found.
+        Tries to download from GCS first, then load from disk, then builds from DB if not found.
 
         Args:
             session: SQLAlchemy database session (required for DB build)
@@ -226,7 +227,34 @@ class FAISSIndexManager:
         if self.index is not None:
             return  # Already loaded
 
-        # Try loading from disk first
+        # Try downloading from GCS if configured
+        gcs_bucket = os.getenv('GCS_FAISS_INDEX_BUCKET')
+        gcs_path = os.getenv('GCS_FAISS_INDEX_PATH')
+
+        if gcs_bucket and gcs_path:
+            try:
+                from ..utils.gcs_utils import download_faiss_index_from_gcs
+
+                logger.info(f"Attempting to download FAISS index from GCS: gs://{gcs_bucket}/{gcs_path}")
+
+                # Download to the configured local path
+                local_path = self.config.storage.faiss_index_path
+                success = download_faiss_index_from_gcs(
+                    bucket_name=gcs_bucket,
+                    gcs_path=gcs_path,
+                    local_path=local_path
+                )
+
+                if success:
+                    logger.info("Successfully downloaded FAISS index from GCS")
+                else:
+                    logger.warning("Failed to download FAISS index from GCS, will try local disk or rebuild")
+            except ImportError:
+                logger.warning("GCS utilities not available, skipping GCS download")
+            except Exception as e:
+                logger.warning(f"Error downloading from GCS: {e}, will try local disk or rebuild")
+
+        # Try loading from disk
         try:
             self.load_index_from_disk()
             logger.info("Successfully loaded existing FAISS index from disk")
@@ -234,7 +262,7 @@ class FAISSIndexManager:
         except (FAISSIndexBuilderError, FileNotFoundError) as e:
             logger.warning(f"Could not load index from disk: {e}")
 
-        # Build from database
+        # Build from database as final fallback
         if session is None:
             if self.db_session_factory is None:
                 raise FAISSIndexManagerError(
@@ -243,6 +271,7 @@ class FAISSIndexManager:
             session = self.db_session_factory()
 
         try:
+            logger.info("Building FAISS index from database...")
             self.build_index_from_db(session)
         finally:
             if self.db_session_factory is not None:
