@@ -64,7 +64,7 @@ export function useOnboardingProducts(
     queryKey: ["onboarding", "products"],
     queryFn: async (): Promise<OnboardingProductsResponse> => {
       const response = await fetch(
-        `${API_URL}/api/v1/onboarding/products?limit=20&diverse=true`,
+        `${API_URL}/onboarding/products?limit=20&diverse=true`,
         {
           method: "GET",
           credentials: "include",
@@ -96,7 +96,7 @@ export function useCompleteOnboarding(
     mutationFn: async (
       request: OnboardingCompleteRequest
     ): Promise<OnboardingCompleteResponse> => {
-      const response = await fetch(`${API_URL}/api/v1/onboarding/complete`, {
+      const response = await fetch(`${API_URL}/onboarding/complete`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
