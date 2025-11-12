@@ -5,8 +5,8 @@ Thread-safe Redis client with connection pooling.
 
 import logging
 import pickle
-from typing import Optional, Any, List, Dict
 import threading
+from typing import Any, Dict, List, Optional
 
 try:
     import redis
@@ -16,7 +16,7 @@ try:
 except ImportError:
     REDIS_AVAILABLE = False
 
-from ..config import get_ml_config, MLConfig
+from ..config import MLConfig, get_ml_config
 
 logger = logging.getLogger(__name__)
 

@@ -7,28 +7,28 @@ from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response, Cookie, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
+from ...db.models import User
 from ..dependencies import get_db
+from ..schemas.auth import (
+    ChangePasswordRequest,
+    ErrorResponse,
+    TokenResponse,
+    UpdateProfileRequest,
+    UserLoginRequest,
+    UserRegisterRequest,
+    UserResponse,
+)
 from ..security import (
-    hash_password,
-    verify_password,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
     create_access_token,
     create_refresh_token,
+    hash_password,
+    verify_password,
     verify_token,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
 )
-from ..schemas.auth import (
-    UserRegisterRequest,
-    UserLoginRequest,
-    TokenResponse,
-    UserResponse,
-    ChangePasswordRequest,
-    UpdateProfileRequest,
-    ErrorResponse,
-)
-from ...db.models import User
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

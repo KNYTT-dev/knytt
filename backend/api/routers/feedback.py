@@ -7,20 +7,21 @@ import logging
 import time
 from datetime import datetime
 from typing import Optional
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from ..config import get_settings, APISettings
+from ...ml.caching import EmbeddingCache
+from ..config import APISettings, get_settings
 from ..dependencies import get_db, get_embedding_cache, get_request_id
+from ..errors import APIError
 from ..models.feedback import (
+    INTERACTION_WEIGHTS,
+    SESSION_DECAY,
     FeedbackRequest,
     FeedbackResponse,
     InteractionType,
-    INTERACTION_WEIGHTS,
-    SESSION_DECAY,
 )
-from ..errors import APIError
-from ...ml.caching import EmbeddingCache
 
 logger = logging.getLogger(__name__)
 
@@ -140,9 +141,11 @@ def _store_interaction(request: FeedbackRequest, db: Session) -> Optional[str]:
         Interaction ID (UUID as string) or None if storage failed
     """
     try:
-        from ...db.models import UserInteraction, User, Product
-        from sqlalchemy import select
         from uuid import UUID
+
+        from sqlalchemy import select
+
+        from ...db.models import Product, User, UserInteraction
 
         # Get or create user
         # Assume user_id is either a UUID string or we look up by external_id

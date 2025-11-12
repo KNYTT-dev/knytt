@@ -3,12 +3,12 @@ Cache Service
 Advanced caching strategies for API performance optimization.
 """
 
-import logging
 import hashlib
+import logging
 import time
-from typing import Dict, List, Optional, Any, Set
-from datetime import datetime, timedelta
 from collections import defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Set
 
 from ...ml.caching import EmbeddingCache
 

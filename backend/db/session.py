@@ -3,9 +3,10 @@ Database Session
 Provides database session factory for use in Celery tasks and other contexts.
 """
 
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import os
 
 # Get database URL from environment
 # Default to local Supabase PostgreSQL

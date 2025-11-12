@@ -3,24 +3,25 @@ Recommend Endpoint
 POST /recommend - Personalized product recommendations.
 """
 
-import logging
 import hashlib
+import logging
 import time
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from ..config import get_settings, APISettings
-from ..dependencies import get_db, get_search_service, get_embedding_cache, get_request_id
-from ..models.recommend import RecommendRequest, RecommendResponse, RecommendationContext
-from ..models.search import ProductResult
-from ..services.text_encoder import get_text_encoder_service, TextEncoderService
-from ..services.metadata_service import get_metadata_service, MetadataService
-from ..services.cache_service import get_cache_service, CacheService
-from ..errors import SearchError
-from ...ml.search import SearchService
-from ...ml.retrieval import ProductFilters, create_user_context
 from ...ml.caching import EmbeddingCache
+from ...ml.retrieval import ProductFilters, create_user_context
+from ...ml.search import SearchService
+from ..config import APISettings, get_settings
+from ..dependencies import get_db, get_embedding_cache, get_request_id, get_search_service
+from ..errors import SearchError
+from ..models.recommend import RecommendationContext, RecommendRequest, RecommendResponse
+from ..models.search import ProductResult
+from ..services.cache_service import CacheService, get_cache_service
+from ..services.metadata_service import MetadataService, get_metadata_service
+from ..services.text_encoder import TextEncoderService, get_text_encoder_service
 
 logger = logging.getLogger(__name__)
 
@@ -105,9 +106,11 @@ async def recommend(
     # Fallback to database if not in cache
     if long_term_embedding is None or (request.use_session_context and session_embedding is None):
         logger.info(f"Cache miss for user {request.user_id}, querying database")
-        from ...db.models import UserEmbedding
         from uuid import UUID
+
         import numpy as np
+
+        from ...db.models import UserEmbedding
 
         try:
             # Convert user_id string to UUID for database query
@@ -263,7 +266,7 @@ async def recommend(
         )
 
     # Step 4: Perform personalized search
-    from ...ml.retrieval import SimilaritySearch, FilteredSimilaritySearch
+    from ...ml.retrieval import FilteredSimilaritySearch, SimilaritySearch
 
     recommend_start = time.time()
 
@@ -426,8 +429,9 @@ def _get_product_embedding(
     Returns:
         Product embedding vector or None
     """
-    import numpy as np
     from uuid import UUID
+
+    import numpy as np
 
     # Try cache first
     cache_key = f"product_embedding:{product_id}"
@@ -443,6 +447,7 @@ def _get_product_embedding(
     if db is not None:
         try:
             from sqlalchemy import select
+
             from ...db.models import Product
 
             # Convert product_id to UUID

@@ -3,20 +3,24 @@ Advanced Deduplication Service
 Uses HDBSCAN clustering and fuzzy matching to identify duplicate products.
 """
 
-import numpy as np
-import pandas as pd
-from typing import List, Dict, Set, Tuple, Optional, Any
 import logging
-from dataclasses import dataclass
 from collections import defaultdict
-import hashlib
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
+import pandas as pd
+from rapidfuzz import fuzz, process
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
-# Initialize logger first
+from backend.models.product import ProductIngestion
+
+# Initialize logger
 logger = logging.getLogger(__name__)
 
+# Optional dependency: hdbscan for clustering
 try:
     import hdbscan
 
@@ -25,12 +29,6 @@ except ImportError:
     HDBSCAN_AVAILABLE = False
     hdbscan = None
     logger.warning("hdbscan not available - clustering-based deduplication disabled")
-
-from rapidfuzz import fuzz, process
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-
-from backend.models.product import ProductIngestion, ProductCanonical
 
 
 @dataclass
@@ -580,7 +578,7 @@ class CrossMerchantDeduplicator:
 
         # Build query
         query = """
-            SELECT id, merchant_id, merchant_product_id, product_name, 
+            SELECT id, merchant_id, merchant_product_id, product_name,
                    brand_name, description, model_number, quality_score
             FROM products
             WHERE is_active = true AND is_duplicate = false
@@ -616,8 +614,8 @@ class CrossMerchantDeduplicator:
             # Create text representations
             texts = []
             for p in brand_products:
-                text = f"{p[3]} {p[5] or ''} {p[6] or ''}"  # name + description + model
-                texts.append(text)
+                product_text = f"{p[3]} {p[5] or ''} {p[6] or ''}"  # name + description + model
+                texts.append(product_text)
 
             # Create embeddings
             try:

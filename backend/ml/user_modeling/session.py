@@ -4,10 +4,11 @@ Tracks short-term user intent within a session.
 """
 
 import logging
-import numpy as np
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
 from collections import deque
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import numpy as np
 
 from ..config import get_ml_config
 

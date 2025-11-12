@@ -4,8 +4,8 @@ Background tasks for processing CSV data, validation, and deduplication
 """
 
 import logging
-from typing import Dict, Any
 from pathlib import Path
+from typing import Any, Dict
 
 from .celery_app import app
 

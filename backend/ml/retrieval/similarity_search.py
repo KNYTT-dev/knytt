@@ -4,9 +4,10 @@ k-NN vector similarity search using FAISS with result formatting.
 """
 
 import logging
-import numpy as np
-from typing import List, Optional, Dict, Tuple, Any
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 try:
     import faiss
@@ -15,7 +16,7 @@ try:
 except ImportError:
     FAISS_AVAILABLE = False
 
-from ..config import get_ml_config, MLConfig
+from ..config import MLConfig, get_ml_config
 from .index_manager import FAISSIndexManager, get_index_manager
 
 logger = logging.getLogger(__name__)

@@ -4,9 +4,10 @@ Updates user embeddings based on interactions using EWMA.
 """
 
 import logging
-import numpy as np
-from typing import Optional, Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import numpy as np
 
 from ..config import get_ml_config
 

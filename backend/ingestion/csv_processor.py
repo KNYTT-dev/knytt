@@ -3,26 +3,25 @@ CSV Ingestion Pipeline
 Processes large CSV files in chunks with validation and error handling.
 """
 
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Any
-import logging
-from datetime import datetime
 import asyncio
-from uuid import uuid4
-import traceback
-import chardet
 import json
+import logging
+import traceback
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+from uuid import uuid4
 
+import chardet
+import numpy as np
+import pandas as pd
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool
 
-from backend.models.product import ProductIngestion, ProductCanonical
-from backend.models.quality import ContentModerator, PriceValidator
-
 from backend.ingestion.deduplicators.deduplicator import AdvancedDeduplicator
+from backend.models.product import ProductCanonical, ProductIngestion
+from backend.models.quality import ContentModerator, PriceValidator
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

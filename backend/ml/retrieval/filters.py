@@ -4,10 +4,14 @@ Build SQL queries and filter product embeddings based on business logic.
 """
 
 import logging
-from typing import List, Optional, Dict, Set, Any, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
+
 import numpy as np
+
+if TYPE_CHECKING:
+    import faiss
 
 logger = logging.getLogger(__name__)
 

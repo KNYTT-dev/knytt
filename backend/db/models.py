@@ -10,19 +10,20 @@ from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import (
-    Column,
-    String,
-    Integer,
-    Float,
-    Boolean,
     TIMESTAMP,
+    Boolean,
+    Column,
+    Float,
     ForeignKey,
-    Numeric,
-    Text,
     Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB, ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
 

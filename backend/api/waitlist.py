@@ -2,13 +2,14 @@
 Waitlist API endpoints for capturing early signups.
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+import logging
+from datetime import datetime
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from datetime import datetime
-from typing import Optional
-import logging
 
 from backend.api.dependencies import get_db
 

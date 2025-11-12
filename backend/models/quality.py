@@ -2,10 +2,10 @@
 Quality assessment and content moderation for products.
 """
 
-from typing import Dict, List, Tuple, Optional
 import re
 from decimal import Decimal
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
 
 
 class QualitySeverity(str, Enum):

@@ -7,13 +7,14 @@ score = 0.6 × similarity + 0.25 × popularity + 0.1 × price_affinity + 0.05 ×
 """
 
 import logging
-import numpy as np
-from typing import List, Optional, Dict, Any, Tuple
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from collections import Counter
+from typing import Any, Dict, List, Optional, Tuple
 
-from ..config import get_ml_config, MLConfig
+import numpy as np
+
+from ..config import MLConfig, get_ml_config
 from .similarity_search import SearchResult, SearchResults
 
 logger = logging.getLogger(__name__)

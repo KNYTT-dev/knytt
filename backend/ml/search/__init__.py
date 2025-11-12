@@ -3,7 +3,7 @@ Search Service Module
 Unified search service integrating all ML components.
 """
 
-from .search_service import SearchService, SearchRequest, SearchResponse, SearchMode
+from .search_service import SearchMode, SearchRequest, SearchResponse, SearchService
 
 __all__ = [
     "SearchService",

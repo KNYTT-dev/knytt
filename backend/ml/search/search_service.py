@@ -5,21 +5,22 @@ Unified search API integrating all ML components.
 
 import logging
 import time
-import numpy as np
-from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from ..config import get_ml_config, MLConfig
+import numpy as np
+
+from ..caching import EmbeddingCache
+from ..config import MLConfig, get_ml_config
+from ..feedback import FeedbackHandler, InteractionType
 from ..retrieval import (
     PersonalizedSearch,
-    UserContext,
     ProductFilters,
-    SearchResults,
     RankingConfig,
+    SearchResults,
+    UserContext,
 )
-from ..caching import EmbeddingCache
-from ..feedback import FeedbackHandler, InteractionType
 
 logger = logging.getLogger(__name__)
 

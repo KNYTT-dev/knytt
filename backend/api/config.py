@@ -3,11 +3,12 @@ API Configuration
 Settings and configuration for FastAPI application.
 """
 
-import os
 import json
-from typing import List, Optional, Any
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+from typing import Any, List, Optional
+
 from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class APISettings(BaseSettings):

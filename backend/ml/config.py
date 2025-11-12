@@ -4,10 +4,10 @@ Centralized configuration for embedding generation, model loading, and user mode
 """
 
 import os
-from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Literal, Optional
 from enum import Enum
+from pathlib import Path
+from typing import Literal, Optional
 
 # Optional torch import (only needed when actually using models)
 try:

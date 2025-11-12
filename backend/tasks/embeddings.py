@@ -4,7 +4,7 @@ Background tasks for generating and updating product embeddings
 """
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .celery_app import app
 
@@ -40,9 +40,10 @@ def generate_product_embeddings(
     Returns:
         Dictionary with generation results
     """
-    from sqlalchemy import select, and_, func
-    from sqlalchemy.dialects.postgresql import insert
     from uuid import UUID
+
+    from sqlalchemy import and_, func, select
+    from sqlalchemy.dialects.postgresql import insert
 
     try:
         logger.info(
@@ -51,9 +52,9 @@ def generate_product_embeddings(
         )
 
         # Import here to avoid circular dependencies and early model loading
-        from ..db.session import SessionLocal
         from ..db.models import Product, ProductEmbedding
-        from ..ml.model_loader import model_registry, TORCH_AVAILABLE
+        from ..db.session import SessionLocal
+        from ..ml.model_loader import TORCH_AVAILABLE, model_registry
 
         if not TORCH_AVAILABLE:
             logger.error("PyTorch not available - cannot generate embeddings")
@@ -259,15 +260,15 @@ def rebuild_faiss_index(self, embedding_type: str = "text") -> Dict[str, Any]:
     Returns:
         Dictionary with rebuild results
     """
-    from sqlalchemy import select
     import numpy as np
+    from sqlalchemy import select
 
     try:
         logger.info(f"Starting FAISS index rebuild for {embedding_type} embeddings")
 
         # Import here to avoid circular dependencies and early loading
-        from ..db.session import SessionLocal
         from ..db.models import Product, ProductEmbedding
+        from ..db.session import SessionLocal
         from ..ml.retrieval.index_builder import FAISSIndexBuilder
 
         # Create database session
@@ -404,17 +405,18 @@ def update_user_embedding(
     Returns:
         Dictionary with update results
     """
-    from sqlalchemy import select
     from uuid import UUID
+
+    from sqlalchemy import select
 
     try:
         logger.info(f"Updating long-term embedding for user {user_external_id}")
 
         # Import here to avoid circular dependencies and early loading
-        from ..db.session import SessionLocal
         from ..db.models import User
-        from ..ml.user_modeling import get_embedding_builder
+        from ..db.session import SessionLocal
         from ..ml.caching import EmbeddingCache
+        from ..ml.user_modeling import get_embedding_builder
 
         # Create database session
         db = SessionLocal()
@@ -503,15 +505,16 @@ def batch_refresh_user_embeddings(
     Returns:
         Dictionary with refresh results
     """
-    from sqlalchemy import select, func
     from datetime import datetime, timedelta
+
+    from sqlalchemy import func, select
 
     try:
         logger.info(f"Starting batch user embedding refresh (active in last {hours_active}h)")
 
         # Import here to avoid circular dependencies
-        from ..db.session import SessionLocal
         from ..db.models import User, UserInteraction
+        from ..db.session import SessionLocal
 
         # Create database session
         db = SessionLocal()
@@ -605,15 +608,16 @@ def cleanup_old_sessions(self, days_old: int = 7) -> Dict[str, Any]:
     Returns:
         Dictionary with cleanup results
     """
-    from sqlalchemy import select, delete
     from datetime import datetime, timedelta
+
+    from sqlalchemy import delete, select
 
     try:
         logger.info(f"Starting session cleanup (older than {days_old} days)")
 
         # Import here to avoid circular dependencies
-        from ..db.session import SessionLocal
         from ..db.models import UserEmbedding
+        from ..db.session import SessionLocal
         from ..ml.caching import EmbeddingCache
 
         # Create database session

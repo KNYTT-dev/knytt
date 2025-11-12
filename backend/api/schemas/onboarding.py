@@ -3,7 +3,8 @@ Onboarding schemas.
 Handles user onboarding flow including style quiz and preference setup.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field, field_validator
 
 

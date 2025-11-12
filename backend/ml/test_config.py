@@ -10,12 +10,7 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from backend.ml.config import (
-    get_ml_config,
-    MLConfig,
-    ModelType,
-    PretrainedSource,
-)
+from backend.ml.config import MLConfig, ModelType, PretrainedSource, get_ml_config
 
 
 def test_config_loading():

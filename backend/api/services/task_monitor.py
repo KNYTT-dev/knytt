@@ -4,29 +4,29 @@ Celery Task Monitoring Service.
 Provides comprehensive monitoring and management of Celery tasks.
 """
 
-from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any, Tuple
-from uuid import UUID
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+from uuid import UUID
 
-from sqlalchemy import select, func, and_, or_
-from sqlalchemy.ext.asyncio import AsyncSession
-from celery.result import AsyncResult
 from celery import Celery
+from celery.result import AsyncResult
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.db.models import TaskExecution, User
 from backend.api.schemas.tasks import (
-    TaskExecutionResponse,
-    TaskExecutionListResponse,
-    TaskStatsResponse,
-    TaskProgressInfo,
-    CeleryWorkerInfo,
-    CeleryQueueInfo,
     CeleryHealthResponse,
-    TaskDispatchResponse,
+    CeleryQueueInfo,
+    CeleryWorkerInfo,
     TaskCancelResponse,
+    TaskDispatchResponse,
+    TaskExecutionListResponse,
+    TaskExecutionResponse,
+    TaskProgressInfo,
     TaskRetryResponse,
+    TaskStatsResponse,
 )
+from backend.db.models import TaskExecution, User
 
 logger = logging.getLogger(__name__)
 

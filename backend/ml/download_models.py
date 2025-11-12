@@ -8,14 +8,14 @@ Usage:
     python -m backend.ml.download_models --model ViT-L-14
 """
 
-import sys
 import argparse
+import sys
 from pathlib import Path
 
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from backend.ml.config import get_ml_config, TORCH_AVAILABLE
+from backend.ml.config import TORCH_AVAILABLE, get_ml_config
 
 if not TORCH_AVAILABLE:
     print("❌ PyTorch not installed. Please run:")
@@ -80,10 +80,11 @@ def download_clip_model(model_name: str = None, pretrained: str = None):
 
         # Verify model works
         print("Verifying model...")
+        from io import BytesIO
+
+        import requests
         import torch
         from PIL import Image
-        import requests
-        from io import BytesIO
 
         # Test with a sample image
         try:

@@ -6,10 +6,11 @@ Builds and configures FAISS indices from product embeddings stored in PostgreSQL
 from __future__ import annotations
 
 import logging
-import numpy as np
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, TYPE_CHECKING, Any
 from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 try:
     import faiss
@@ -22,7 +23,7 @@ except ImportError:
 if TYPE_CHECKING:
     import faiss
 
-from ..config import get_ml_config, MLConfig
+from ..config import MLConfig, get_ml_config
 
 logger = logging.getLogger(__name__)
 

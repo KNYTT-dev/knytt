@@ -3,7 +3,7 @@ Database ORM Models
 SQLAlchemy ORM models for database tables.
 """
 
-from .models import Base, User, UserEmbedding, UserInteraction, Product, ProductEmbedding
+from .models import Base, Product, ProductEmbedding, User, UserEmbedding, UserInteraction
 
 __all__ = [
     "Base",

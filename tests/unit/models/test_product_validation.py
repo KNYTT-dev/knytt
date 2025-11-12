@@ -3,10 +3,10 @@
 Test the product validation models with sample data.
 """
 
-import sys
-from pathlib import Path
-from decimal import Decimal
 import json
+import sys
+from decimal import Decimal
+from pathlib import Path
 
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent))

@@ -5,8 +5,9 @@ Fetches and enriches product metadata from database.
 
 import logging
 from typing import Dict, List, Optional
-from sqlalchemy.orm import Session
+
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from ...ml.caching import EmbeddingCache
 from ..models.search import ProductResult

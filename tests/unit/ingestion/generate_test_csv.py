@@ -3,9 +3,10 @@
 Generate test CSV data for pipeline testing.
 """
 
-import pandas as pd
 import random
 from pathlib import Path
+
+import pandas as pd
 
 
 def generate_test_csv(num_rows: int = 100, output_file: str = "data/test/test_products.csv"):

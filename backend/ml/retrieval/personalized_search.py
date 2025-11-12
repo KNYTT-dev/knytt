@@ -4,18 +4,19 @@ Integrates user embeddings with similarity search for personalized recommendatio
 """
 
 import logging
-import numpy as np
-from typing import Optional, Dict, List, Any
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
-from ..config import get_ml_config, MLConfig
+import numpy as np
+
+from ..config import MLConfig, get_ml_config
 from ..user_modeling.blending import UserEmbeddingBlender
 from ..user_modeling.session import SessionManager
-from .similarity_search import SimilaritySearch, SearchResults
 from .filtered_search import FilteredSimilaritySearch
 from .filters import ProductFilters
-from .ranking import HeuristicRanker, RankingConfig
 from .index_manager import get_index_manager
+from .ranking import HeuristicRanker, RankingConfig
+from .similarity_search import SearchResults, SimilaritySearch
 
 logger = logging.getLogger(__name__)
 

@@ -3,28 +3,28 @@ Retrieval & Search Module
 FAISS-based vector similarity search with filtering and ranking.
 """
 
-from .index_builder import FAISSIndexBuilder
-from .index_manager import FAISSIndexManager, get_index_manager
-from .similarity_search import SimilaritySearch, SearchResult, SearchResults
+from .filtered_search import FilteredSimilaritySearch
 from .filters import (
-    ProductFilter,
-    ProductFilters,
     FilteredSearcher,
     FilterOperator,
-    create_price_filter,
-    create_merchant_filter,
-    create_category_filter,
+    ProductFilter,
+    ProductFilters,
     combine_filters,
+    create_category_filter,
+    create_merchant_filter,
+    create_price_filter,
 )
-from .filtered_search import FilteredSimilaritySearch
+from .index_builder import FAISSIndexBuilder
+from .index_manager import FAISSIndexManager, get_index_manager
+from .personalized_search import PersonalizedSearch, UserContext, create_user_context
 from .ranking import (
-    RankingConfig,
-    PopularityScorer,
-    PriceAffinityScorer,
     BrandMatchScorer,
     HeuristicRanker,
+    PopularityScorer,
+    PriceAffinityScorer,
+    RankingConfig,
 )
-from .personalized_search import PersonalizedSearch, UserContext, create_user_context
+from .similarity_search import SearchResult, SearchResults, SimilaritySearch
 
 __all__ = [
     "FAISSIndexBuilder",

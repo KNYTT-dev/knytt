@@ -5,25 +5,26 @@ Entry point for the GreenThumb ML API.
 
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
+from ..db.session import SessionLocal
+from ..ml.retrieval import get_index_manager
 from .config import get_settings
 from .errors import setup_error_handlers
 from .middleware import RequestLoggingMiddleware, RequestTimingMiddleware
 from .routers import (
-    health_router,
-    search_router,
-    recommend_router,
-    feedback_router,
     admin_router,
     auth_router,
-    users_router,
+    feedback_router,
+    health_router,
     onboarding_router,
+    recommend_router,
+    search_router,
+    users_router,
 )
-from ..ml.retrieval import get_index_manager
-from ..db.session import SessionLocal
 
 # Configure logging
 logging.basicConfig(

@@ -6,17 +6,18 @@ Handles lazy loading, device management, and provides encoding APIs.
 
 import logging
 import time
-from typing import Optional, List, Union, Tuple
 from pathlib import Path
+from typing import List, Optional, Tuple, Union
+
 import numpy as np
 from PIL import Image
 
-from .config import get_ml_config, TORCH_AVAILABLE
+from .config import TORCH_AVAILABLE, get_ml_config
 
 # Only import ML libraries if available
 if TORCH_AVAILABLE:
-    import torch
     import open_clip
+    import torch
     from open_clip import tokenize
 else:
     torch = None

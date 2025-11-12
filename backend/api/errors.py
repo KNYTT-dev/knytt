@@ -5,9 +5,10 @@ Custom exception handlers for FastAPI.
 
 import logging
 from typing import Union
+
 from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)

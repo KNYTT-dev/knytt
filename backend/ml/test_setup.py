@@ -16,18 +16,16 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from backend.ml.config import get_ml_config, TORCH_AVAILABLE
-from backend.ml.model_loader import (
-    model_registry,
-    ModelNotAvailableError,
-)
+from backend.ml.config import TORCH_AVAILABLE, get_ml_config
+from backend.ml.model_loader import ModelNotAvailableError, model_registry
 
 # Only import if available
 if TORCH_AVAILABLE:
-    from PIL import Image
-    import requests
     from io import BytesIO
+
     import numpy as np
+    import requests
+    from PIL import Image
 
 
 def check_dependencies():

@@ -6,17 +6,17 @@ FastAPI dependencies for database, services, and configurations.
 import logging
 from typing import Generator, Optional
 from uuid import UUID
-from fastapi import Depends, Header, HTTPException, status, Cookie
 
+from fastapi import Cookie, Depends, Header, HTTPException, status
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from .config import get_settings, APISettings
-from .security import verify_token
 from ..db.models import User
-from ..ml.search import SearchService
-from ..ml.retrieval import get_index_manager
 from ..ml.caching import EmbeddingCache
+from ..ml.retrieval import get_index_manager
+from ..ml.search import SearchService
+from .config import APISettings, get_settings
+from .security import verify_token
 
 logger = logging.getLogger(__name__)
 

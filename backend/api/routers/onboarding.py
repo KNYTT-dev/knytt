@@ -4,27 +4,27 @@ Handles user onboarding including style quiz and preference setup.
 """
 
 import logging
-from typing import List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List
+
 import numpy as np
-
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
 
-from ..dependencies import get_db, get_current_user, get_embedding_cache
-from ..schemas.onboarding import (
-    OnboardingProductsRequest,
-    OnboardingProductsResponse,
-    OnboardingProduct,
-    OnboardingCompleteRequest,
-    OnboardingCompleteResponse,
-    OnboardingStatusResponse,
-)
-from ...db.models import User, Product, UserInteraction, UserEmbedding, ProductEmbedding
+from ...db.models import Product, ProductEmbedding, User, UserEmbedding, UserInteraction
+from ...ml.caching import EmbeddingCache
 from ...ml.user_modeling.cold_start import ColdStartEmbedding
 from ...ml.user_modeling.embedding_builder import UserEmbeddingBuilder
-from ...ml.caching import EmbeddingCache
+from ..dependencies import get_current_user, get_db, get_embedding_cache
+from ..schemas.onboarding import (
+    OnboardingCompleteRequest,
+    OnboardingCompleteResponse,
+    OnboardingProduct,
+    OnboardingProductsRequest,
+    OnboardingProductsResponse,
+    OnboardingStatusResponse,
+)
 
 logger = logging.getLogger(__name__)
 

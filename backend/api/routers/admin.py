@@ -8,14 +8,15 @@ GET /admin/task-status/{task_id} - Check Celery task status
 """
 
 import logging
-from typing import Optional, List
-from fastapi import APIRouter, Depends, status, HTTPException
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from ..config import get_settings, APISettings
-from ..dependencies import get_db, get_embedding_cache
 from ...ml.caching import EmbeddingCache
+from ..config import APISettings, get_settings
+from ..dependencies import get_db, get_embedding_cache
 
 logger = logging.getLogger(__name__)
 
@@ -193,9 +194,10 @@ async def refresh_user_embeddings(
     try:
         if request.user_ids:
             # Refresh specific users
-            from ...tasks.embeddings import update_user_embedding
-            from ...db.models import User
             from sqlalchemy import select
+
+            from ...db.models import User
+            from ...tasks.embeddings import update_user_embedding
 
             # Get external IDs for the user IDs
             user_ids_int = request.user_ids
@@ -403,6 +405,7 @@ async def get_task_status(task_id: str) -> TaskStatusResponse:
     """
     try:
         from celery.result import AsyncResult
+
         from ...tasks.celery_app import app as celery_app
 
         # Get task result

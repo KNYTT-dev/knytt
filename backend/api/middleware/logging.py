@@ -6,6 +6,7 @@ Logs all incoming requests and responses.
 import logging
 import time
 from typing import Callable
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 

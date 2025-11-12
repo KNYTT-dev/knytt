@@ -4,8 +4,9 @@ Generates initial user embeddings from style quiz selections.
 """
 
 import logging
+from typing import Any, Dict, List, Optional
+
 import numpy as np
-from typing import List, Optional, Dict, Any
 
 from ..config import get_ml_config
 

@@ -3,9 +3,11 @@ Recommendation Models
 Pydantic models for recommendation endpoint.
 """
 
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
+
 from .common import FilterParams
 from .search import ProductResult
 

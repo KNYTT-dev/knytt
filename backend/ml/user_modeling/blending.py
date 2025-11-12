@@ -4,8 +4,9 @@ Combines long-term and session embeddings for personalized recommendations.
 """
 
 import logging
+from typing import Any, Dict, Optional
+
 import numpy as np
-from typing import Optional, Dict, Any
 
 from ..config import get_ml_config
 

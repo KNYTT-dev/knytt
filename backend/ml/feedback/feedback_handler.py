@@ -4,16 +4,17 @@ Processes user interaction events and updates embeddings in real-time.
 """
 
 import logging
-import numpy as np
-from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from ..config import get_ml_config, MLConfig
-from ..user_modeling.warm_user import WarmUserEmbedding
-from ..user_modeling.session import SessionManager
+import numpy as np
+
 from ..caching import EmbeddingCache
+from ..config import MLConfig, get_ml_config
+from ..user_modeling.session import SessionManager
+from ..user_modeling.warm_user import WarmUserEmbedding
 
 logger = logging.getLogger(__name__)
 

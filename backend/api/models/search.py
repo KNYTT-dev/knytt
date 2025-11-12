@@ -3,9 +3,11 @@ Search Models
 Pydantic models for search endpoint.
 """
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
-from .common import PaginationParams, FilterParams
+
+from .common import FilterParams, PaginationParams
 
 
 class SearchRequest(BaseModel):

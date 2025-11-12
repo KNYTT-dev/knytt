@@ -4,12 +4,13 @@ Converts search query text to embeddings using CLIP text encoder.
 """
 
 import logging
-import numpy as np
-from typing import Optional
 import re
+from typing import Optional
 
+import numpy as np
+
+from ...ml.config import MLConfig, get_ml_config
 from ...ml.model_loader import model_registry
-from ...ml.config import get_ml_config, MLConfig
 
 logger = logging.getLogger(__name__)
 

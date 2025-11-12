@@ -4,24 +4,24 @@ Handles user favorites, history, statistics, and preferences.
 """
 
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
 
-from ..dependencies import get_db, get_current_user
+from ...db.models import Product, User, UserInteraction
+from ..dependencies import get_current_user, get_db
+from ..schemas.auth import UserResponse
 from ..schemas.user import (
+    FavoriteProduct,
+    FavoritesResponse,
+    InteractionHistoryItem,
+    InteractionHistoryResponse,
     UserPreferencesUpdate,
     UserStatsResponse,
-    InteractionHistoryResponse,
-    InteractionHistoryItem,
-    FavoritesResponse,
-    FavoriteProduct,
 )
-from ..schemas.auth import UserResponse
-from ...db.models import User, UserInteraction, Product
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

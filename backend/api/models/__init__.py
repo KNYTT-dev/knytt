@@ -4,9 +4,9 @@ Request/response models for API endpoints.
 """
 
 from .common import ErrorResponse, PaginationParams
-from .search import SearchRequest, SearchResponse, ProductResult
-from .recommend import RecommendRequest, RecommendResponse, RecommendationContext
 from .feedback import FeedbackRequest, FeedbackResponse, InteractionType
+from .recommend import RecommendationContext, RecommendRequest, RecommendResponse
+from .search import ProductResult, SearchRequest, SearchResponse
 
 __all__ = [
     "ErrorResponse",

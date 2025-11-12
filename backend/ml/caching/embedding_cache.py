@@ -4,11 +4,12 @@ Caches product and user embeddings in Redis for fast access.
 """
 
 import logging
-import numpy as np
-from typing import Optional, Dict, List, Set
 from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Set
 
-from ..config import get_ml_config, MLConfig
+import numpy as np
+
+from ..config import MLConfig, get_ml_config
 from .redis_cache import RedisCache, get_redis_cache
 
 logger = logging.getLogger(__name__)

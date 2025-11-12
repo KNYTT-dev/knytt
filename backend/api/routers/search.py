@@ -3,23 +3,26 @@ Search Endpoint
 POST /search - Text-based product search with personalization.
 """
 
-import logging
 import hashlib
+import logging
 import time
-from typing import Dict, Any
+from typing import Any, Dict
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from ..config import get_settings, APISettings
-from ..dependencies import get_db, get_search_service, get_embedding_cache, get_request_id
-from ..models.search import SearchRequest, SearchResponse, ProductResult
-from ..services.text_encoder import get_text_encoder_service, TextEncoderService
-from ..services.metadata_service import get_metadata_service, MetadataService
-from ..services.cache_service import get_cache_service, CacheService
-from ..errors import SearchError
-from ...ml.search import SearchService, SearchRequest as MLSearchRequest, SearchMode
-from ...ml.retrieval import ProductFilters, create_user_context
 from ...ml.caching import EmbeddingCache
+from ...ml.retrieval import ProductFilters, create_user_context
+from ...ml.search import SearchMode
+from ...ml.search import SearchRequest as MLSearchRequest
+from ...ml.search import SearchService
+from ..config import APISettings, get_settings
+from ..dependencies import get_db, get_embedding_cache, get_request_id, get_search_service
+from ..errors import SearchError
+from ..models.search import ProductResult, SearchRequest, SearchResponse
+from ..services.cache_service import CacheService, get_cache_service
+from ..services.metadata_service import MetadataService, get_metadata_service
+from ..services.text_encoder import TextEncoderService, get_text_encoder_service
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +136,7 @@ async def search(
     # TODO: Implement proper text search in SearchService
 
     # For now, use the query embedding directly
-    from ...ml.retrieval import SimilaritySearch, FilteredSimilaritySearch
+    from ...ml.retrieval import FilteredSimilaritySearch, SimilaritySearch
 
     # Ensure FAISS index is loaded (lazy loading on first search request)
     index_manager = search_service.personalized_search.index_manager

@@ -6,16 +6,17 @@ Builds and updates user embeddings from interaction history stored in database.
 from __future__ import annotations
 
 import logging
-import numpy as np
-from typing import Optional, List, Dict, Any, Tuple
 from datetime import datetime, timedelta
-from sqlalchemy.orm import Session
-from sqlalchemy import select, and_, desc
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
+import numpy as np
+from sqlalchemy import and_, desc, select
+from sqlalchemy.orm import Session
+
 from ..config import get_ml_config
-from .warm_user import get_warm_user_updater
 from .cold_start import get_cold_start_generator
+from .warm_user import get_warm_user_updater
 
 logger = logging.getLogger(__name__)
 

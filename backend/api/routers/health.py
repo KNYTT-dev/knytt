@@ -5,17 +5,18 @@ Endpoints for health checks and status monitoring.
 
 import logging
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any, Dict
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from ..config import get_settings, APISettings
+from ...ml.caching import EmbeddingCache
+from ...ml.retrieval import get_index_manager
+from ..config import APISettings, get_settings
 from ..dependencies import get_db, get_embedding_cache
 from ..middleware.timing import get_latency_tracker
 from ..services.cache_service import get_cache_service
 from ..services.performance_monitor import get_performance_monitor
-from ...ml.retrieval import get_index_manager
-from ...ml.caching import EmbeddingCache
 
 logger = logging.getLogger(__name__)
 

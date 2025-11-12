@@ -4,9 +4,10 @@ Two-stage search: PostgreSQL filtering → FAISS similarity search
 """
 
 import logging
-import numpy as np
-from typing import List, Optional, Set, Dict
 import time
+from typing import Dict, List, Optional, Set
+
+import numpy as np
 
 try:
     import faiss
@@ -15,10 +16,10 @@ try:
 except ImportError:
     FAISS_AVAILABLE = False
 
-from ..config import get_ml_config, MLConfig
-from .similarity_search import SimilaritySearch, SearchResults, SearchResult
+from ..config import MLConfig, get_ml_config
+from .filters import FilteredSearcher, ProductFilters
 from .index_manager import FAISSIndexManager, get_index_manager
-from .filters import ProductFilters, FilteredSearcher
+from .similarity_search import SearchResult, SearchResults, SimilaritySearch
 
 logger = logging.getLogger(__name__)
 
