@@ -1,6 +1,10 @@
 -- Create Users Authentication Tables
 -- Adds users, user_embeddings, user_interactions, and task_executions tables
 
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "vector";
+
 -- =====================================================
 -- USERS TABLE (Custom Authentication)
 -- =====================================================
