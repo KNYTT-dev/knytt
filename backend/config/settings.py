@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     api_port: int = 8000
 
     # CORS
-    cors_origins: str = "http://localhost:3000,http://localhost:3001"
+    cors_origins: str = "http://localhost:3000,http://localhost:3001,https://knytt.xyz"
 
     class Config:
         env_file = ".env"
