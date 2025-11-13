@@ -576,6 +576,15 @@ resource "google_cloud_scheduler_job" "generate_embeddings" {
   http_target {
     http_method = "POST"
     uri         = "${google_cloud_run_v2_service.api.uri}/api/v1/admin/generate-embeddings"
+    body        = base64encode(jsonencode({
+      batch_size       = 16
+      force_regenerate = false
+      embedding_type   = "text"
+    }))
+
+    headers = {
+      "Content-Type" = "application/json"
+    }
 
     oidc_token {
       service_account_email = google_service_account.cloud_run_sa.email
@@ -597,6 +606,13 @@ resource "google_cloud_scheduler_job" "rebuild_faiss_index" {
   http_target {
     http_method = "POST"
     uri         = "${google_cloud_run_v2_service.api.uri}/api/v1/admin/rebuild-index"
+    body        = base64encode(jsonencode({
+      embedding_type = "text"
+    }))
+
+    headers = {
+      "Content-Type" = "application/json"
+    }
 
     oidc_token {
       service_account_email = google_service_account.cloud_run_sa.email
