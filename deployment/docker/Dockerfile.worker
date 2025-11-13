@@ -59,11 +59,6 @@ USER appuser
 # Cloud Run requires a port even for workers
 EXPOSE 8080
 
-# Run a simple HTTP server for health checks alongside Celery worker
-# In production, you'd run this with a process manager like supervisord
-CMD python -m celery -A backend.tasks.celery_app worker \
-    --loglevel=info \
-    --concurrency=2 \
-    --max-tasks-per-child=10 \
-    --time-limit=900 \
-    --soft-time-limit=840
+# Run worker with HTTP health check server for Cloud Run
+# The start_worker.py script starts both the health server and Celery
+CMD ["python", "/app/workers/start_worker.py"]
