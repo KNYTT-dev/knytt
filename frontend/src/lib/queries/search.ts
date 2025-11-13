@@ -8,7 +8,7 @@ import {
   UseQueryOptions,
   UseInfiniteQueryOptions,
 } from "@tanstack/react-query";
-import { SearchRequest, SearchResponse } from "@/types/api";
+import { SearchRequest, SearchResponse, ProductResult } from "@/types/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
@@ -83,6 +83,36 @@ export function useInfiniteSearch(
       return nextOffset < lastPage.total ? nextOffset : undefined;
     },
     enabled: !!baseRequest.query,
+    ...options,
+  });
+}
+
+/**
+ * Hook to fetch a single product by ID
+ */
+export function useProduct(
+  productId: string,
+  options?: Omit<UseQueryOptions<ProductResult>, "queryKey" | "queryFn">
+) {
+  return useQuery({
+    queryKey: ["product", productId],
+    queryFn: async (): Promise<ProductResult> => {
+      const response = await fetch(`${API_URL}/api/v1/products/${productId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to fetch product");
+      }
+
+      return response.json();
+    },
+    enabled: !!productId,
     ...options,
   });
 }

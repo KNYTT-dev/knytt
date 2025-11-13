@@ -1,10 +1,10 @@
 "use client";
 
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ChevronLeft, Share2, Loader2, AlertCircle } from "lucide-react";
 import { useTrackInteraction } from "@/lib/queries/feedback";
 import { InteractionType } from "@/types/enums";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import {
   ProductImageGallery,
@@ -13,7 +13,7 @@ import {
   ProductActions,
   SimilarProducts,
 } from "@/components/product";
-import { useSearch } from "@/lib/queries/search";
+import { useProduct } from "@/lib/queries/search";
 import { useAuth } from "@/lib/queries/auth";
 import type { ProductResult } from "@/types/api";
 
@@ -23,25 +23,13 @@ export const runtime = "edge";
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const productId = params.id as string;
   const feedbackMutation = useTrackInteraction();
-  const [product, setProduct] = useState<ProductResult | null>(null);
   const { user } = useAuth();
   const userId = user?.id;
 
-  // Try to fetch product via search (temporary solution)
-  // We search with a very specific query to try to get this product
-  const productTitle = searchParams.get("title");
-  const { data: searchData, isLoading } = useSearch(
-    {
-      query: productTitle || productId.substring(0, 8), // Use title or part of ID
-      limit: 50,
-    },
-    {
-      enabled: !product && !!productId, // Only search if we don't have product data
-    }
-  );
+  // Fetch product by ID
+  const { data: product, isLoading, error } = useProduct(productId);
 
   // Track product view on page load
   useEffect(() => {
@@ -53,22 +41,6 @@ export default function ProductDetailPage() {
       });
     }
   }, [productId, user]);
-
-  // Try to find the product in search results
-  useEffect(() => {
-    if (searchData && searchData.results.length > 0 && !product) {
-      // Try to find exact match by ID
-      const exactMatch = searchData.results.find(
-        (p) => p.product_id === productId
-      );
-      if (exactMatch) {
-        setProduct(exactMatch);
-      } else {
-        // Use first result as fallback
-        setProduct(searchData.results[0]);
-      }
-    }
-  }, [searchData, productId, product]);
 
   const handleShare = async () => {
     const url = window.location.href;
