@@ -563,6 +563,76 @@ resource "google_cloud_run_v2_service" "worker" {
 }
 
 # =====================================================
+# CLOUD RUN JOB: Batch Embedding Generation
+# =====================================================
+
+resource "google_cloud_run_v2_job" "generate_embeddings" {
+  name     = "knytt-generate-embeddings-${var.environment}"
+  location = var.region
+
+  template {
+    template {
+      service_account = google_service_account.cloud_run_sa.email
+
+      vpc_access {
+        connector = google_vpc_access_connector.connector.id
+        egress    = "PRIVATE_RANGES_ONLY"
+      }
+
+      timeout = "3600s"  # 1 hour timeout for batch job
+
+      max_retries = 1
+
+      containers {
+        image = var.api_image
+
+        # Override command to run embedding generation script
+        command = ["python"]
+        args    = ["scripts/ml/generate_embeddings.py"]
+
+        resources {
+          limits = {
+            cpu    = "4"
+            memory = "8Gi"
+          }
+        }
+
+        env {
+          name  = "ENVIRONMENT"
+          value = var.environment
+        }
+
+        env {
+          name = "DATABASE_URL"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.database_url.secret_id
+              version = "latest"
+            }
+          }
+        }
+
+        env {
+          name = "HF_TOKEN"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.hf_token.secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  labels = {
+    environment = var.environment
+    application = "knytt"
+    component   = "embedding-job"
+  }
+}
+
+# =====================================================
 # CLOUD SCHEDULER: Trigger periodic tasks
 # =====================================================
 
