@@ -51,6 +51,7 @@ RUN useradd -m -u 1000 appuser && \
 # Copy application code
 COPY --chown=appuser:appuser backend/ /app/backend/
 COPY --chown=appuser:appuser models/ /app/models/
+COPY --chown=appuser:appuser scripts/ /app/scripts/
 
 # Switch to non-root user
 USER appuser
