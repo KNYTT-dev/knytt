@@ -68,7 +68,7 @@ class MetadataService:
 
             # Create ProductResult
             result = ProductResult(
-                product_id=product_id,
+                product_id=str(product_id),
                 title=product_data.get("title", "Unknown Product"),
                 description=product_data.get("description"),
                 price=product_data.get("price", 0.0),
