@@ -91,7 +91,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
         {/* Left icon */}
         {leftIcon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray pointer-events-none">
+          <div className={`absolute left-3 text-gray pointer-events-none ${floatingLabel && label ? 'top-[52%] -translate-y-1/2' : 'top-1/2 -translate-y-1/2'}`}>
             {leftIcon}
           </div>
         )}
@@ -113,14 +113,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray hover:text-charcoal transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-pinterest-red"
+            className={`absolute right-3 text-gray hover:text-charcoal transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-pinterest-red ${floatingLabel && label ? 'top-[52%] -translate-y-1/2' : 'top-1/2 -translate-y-1/2'}`}
             tabIndex={-1}
           >
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         ) : (
           rightIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray pointer-events-none">
+            <div className={`absolute right-3 text-gray pointer-events-none ${floatingLabel && label ? 'top-[52%] -translate-y-1/2' : 'top-1/2 -translate-y-1/2'}`}>
               {rightIcon}
             </div>
           )
