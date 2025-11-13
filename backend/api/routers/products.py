@@ -69,11 +69,12 @@ async def get_product(
             )
 
         # Enrich with metadata service
-        # MetadataService.enrich_results expects List[int] for product_ids
-        # and Dict[int, Dict] for scores, so we need to convert
+        # MetadataService.enrich_results expects List[str] for product_ids (UUID strings)
+        # and Dict[str, Dict] for scores, so we need to convert UUID to string
+        product_id_str = str(product.id)
         enriched_results = metadata_service.enrich_results(
-            product_ids=[product.id],
-            scores={product.id: {"similarity": 1.0, "rank": 1}},  # Default scores for single product
+            product_ids=[product_id_str],
+            scores={product_id_str: {"similarity": 1.0, "rank": 1}},  # Default scores for single product
             db=db,
         )
 
