@@ -96,6 +96,9 @@ jobs:
       contents: read
       id-token: write
 
+    outputs:
+      sha_short: ${{ steps.vars.outputs.sha_short }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -194,8 +197,8 @@ jobs:
             -var="supabase_anon_key=${{ secrets.SUPABASE_ANON_KEY }}" \
             -var="database_url=${{ secrets.DATABASE_URL }}" \
             -var="hf_token=${{ secrets.HF_TOKEN }}" \
-            -var="api_image=${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/knytt-${{ needs.setup.outputs.environment }}/knytt-api:latest" \
-            -var="worker_image=${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/knytt-${{ needs.setup.outputs.environment }}/knytt-worker:latest" \
+            -var="api_image=${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/knytt-${{ needs.setup.outputs.environment }}/knytt-api:${{ needs.build.outputs.sha_short }}" \
+            -var="worker_image=${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/knytt-${{ needs.setup.outputs.environment }}/knytt-worker:${{ needs.build.outputs.sha_short }}" \
             -out=tfplan
 
       - name: Terraform Apply
