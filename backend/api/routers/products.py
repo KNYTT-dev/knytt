@@ -11,10 +11,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ...db.models import Product
-from ..dependencies import get_db, get_metadata_service, get_request_id
+from ..dependencies import get_db, get_request_id
 from ..errors import APIError
 from ..models.search import ProductResult
-from ..services.metadata_service import MetadataService
+from ..services.metadata_service import MetadataService, get_metadata_service
 
 logger = logging.getLogger(__name__)
 
