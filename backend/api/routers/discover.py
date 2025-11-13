@@ -89,16 +89,16 @@ async def discover_products(
                 price=float(product.search_price) if product.search_price else 0.0,
                 currency=product.currency or "USD",
                 merchant_name=product.merchant_name or "",
-                merchant_id=str(product.merchant_id) if product.merchant_id else None,
+                merchant_id=product.merchant_id,  # Keep as int, schema expects Optional[int]
                 category_name=product.category_name or "",
-                category_id=str(product.category_id) if product.category_id else None,
+                category_id=product.category_id,  # Keep as int, schema expects Optional[int]
                 brand_name=product.brand_name or "",
                 image_url=image_url,
                 product_url=product.aw_deep_link or product.merchant_deep_link or "",
                 in_stock=product.in_stock if product.in_stock is not None else True,
                 score=0.0,  # No ML score for simple discover
-                similarity=None,
-                rank=None,
+                similarity=0.0,  # Default similarity for non-ML results
+                rank=len(results),  # Sequential rank based on position
             ))
 
         return {
