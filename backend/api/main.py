@@ -22,6 +22,7 @@ from .routers import (
     feedback_router,
     health_router,
     onboarding_router,
+    products_router,
     recommend_router,
     search_router,
     users_router,
@@ -103,6 +104,7 @@ def create_app() -> FastAPI:
     app.include_router(discover_router)  # Simple product discovery (no ML required)
     app.include_router(search_router)
     app.include_router(recommend_router)
+    app.include_router(products_router)  # Product details endpoint
     app.include_router(feedback_router)
     app.include_router(admin_router)
 

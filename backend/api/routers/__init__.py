@@ -9,6 +9,7 @@ from .discover import router as discover_router
 from .feedback import router as feedback_router
 from .health import router as health_router
 from .onboarding import router as onboarding_router
+from .products import router as products_router
 from .recommend import router as recommend_router
 from .search import router as search_router
 from .users import router as users_router
@@ -19,6 +20,7 @@ __all__ = [
     "search_router",
     "discover_router",
     "recommend_router",
+    "products_router",
     "feedback_router",
     "admin_router",
     "users_router",
