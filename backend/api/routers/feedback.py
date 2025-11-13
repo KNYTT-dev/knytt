@@ -148,18 +148,34 @@ def _store_interaction(request: FeedbackRequest, db: Session) -> Optional[str]:
         from ...db.models import Product, User, UserInteraction
 
         # Get or create user
-        # Assume user_id is either a UUID string or we look up by external_id
-        user_external_id = str(request.user_id)
-        user = db.execute(
-            select(User).where(User.external_id == user_external_id)
-        ).scalar_one_or_none()
+        # Try to parse as UUID first (database ID), fallback to external_id lookup
+        user_id_str = str(request.user_id)
+        user = None
+
+        try:
+            # Try as UUID (database ID)
+            user_uuid = UUID(user_id_str)
+            user = db.execute(
+                select(User).where(User.id == user_uuid)
+            ).scalar_one_or_none()
+
+            if user:
+                logger.debug(f"Found user by database ID: {user_uuid}")
+        except ValueError:
+            # Not a UUID, try external_id lookup
+            user = db.execute(
+                select(User).where(User.external_id == user_id_str)
+            ).scalar_one_or_none()
+
+            if user:
+                logger.debug(f"Found user by external_id: {user_id_str}")
 
         if user is None:
-            # Create new user with external_id
-            user = User(external_id=user_external_id)
+            # Create new user with external_id (for external user systems)
+            user = User(external_id=user_id_str)
             db.add(user)
             db.flush()  # Get the user ID
-            logger.info(f"Created new user: external_id={user_external_id}, id={user.id}")
+            logger.info(f"Created new user: external_id={user_id_str}, id={user.id}")
 
         # Get product by UUID (assume product_id is a UUID string)
         try:

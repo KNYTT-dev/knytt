@@ -28,7 +28,7 @@ export default function ProductDetailPage() {
   const feedbackMutation = useTrackInteraction();
   const [product, setProduct] = useState<ProductResult | null>(null);
   const { user } = useAuth();
-  const userId = user?.id ? Number(user.id) : undefined;
+  const userId = user?.id;
 
   // Try to fetch product via search (temporary solution)
   // We search with a very specific query to try to get this product

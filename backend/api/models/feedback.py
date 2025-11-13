@@ -34,7 +34,7 @@ class FeedbackRequest(BaseModel):
     """
 
     # User and product
-    user_id: int = Field(..., description="User ID (external ID)")
+    user_id: str = Field(..., description="User ID (external ID or UUID)")
     product_id: str = Field(..., description="Product ID (UUID)")
 
     # Interaction details
@@ -102,7 +102,7 @@ class FeedbackResponse(BaseModel):
     interaction_id: Optional[str] = Field(
         None, description="Database ID of recorded interaction (UUID)"
     )
-    user_id: int = Field(..., description="User ID")
+    user_id: str = Field(..., description="User ID (external ID or UUID)")
     product_id: str = Field(..., description="Product ID (UUID)")
     interaction_type: str = Field(..., description="Type of interaction")
 

@@ -6,14 +6,14 @@ import { Loader2, Sparkles } from "lucide-react";
 
 interface SimilarProductsProps {
   productId: string;
-  userId?: number;
+  userId?: string;
 }
 
 export function SimilarProducts({ productId, userId }: SimilarProductsProps) {
   // Only fetch if userId is available
   const { data, isLoading, error } = useSimilarProducts(
     productId,
-    userId ? String(userId) : undefined
+    userId
   );
 
   if (isLoading) {
