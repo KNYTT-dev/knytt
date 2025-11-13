@@ -59,7 +59,7 @@ export function SimilarProducts({ productId, userId }: SimilarProductsProps) {
             <ProductCard
               key={product.product_id}
               product={product}
-              userId={userId}
+              userId={userId ? Number(userId) : undefined}
             />
           ))}
         </div>
