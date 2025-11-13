@@ -575,16 +575,7 @@ resource "google_cloud_scheduler_job" "generate_embeddings" {
 
   http_target {
     http_method = "POST"
-    uri         = "${google_cloud_run_v2_service.api.uri}/api/v1/admin/generate-embeddings"
-    body        = base64encode(jsonencode({
-      batch_size       = 16
-      force_regenerate = false
-      embedding_type   = "text"
-    }))
-
-    headers = {
-      "Content-Type" = "application/json"
-    }
+    uri         = "${google_cloud_run_v2_service.api.uri}/api/v1/admin/generate-embeddings-sync?batch_size=16&max_products=1000"
 
     oidc_token {
       service_account_email = google_service_account.cloud_run_sa.email
@@ -592,7 +583,7 @@ resource "google_cloud_scheduler_job" "generate_embeddings" {
   }
 
   retry_config {
-    retry_count = 3
+    retry_count = 1  # Only retry once since it's a long-running operation
   }
 }
 

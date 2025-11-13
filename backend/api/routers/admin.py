@@ -428,3 +428,148 @@ async def get_task_status(task_id: str) -> TaskStatusResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get task status: {str(e)}",
         )
+
+
+@router.post("/generate-embeddings-sync", status_code=status.HTTP_200_OK)
+async def generate_product_embeddings_sync(
+    db: Session = Depends(get_db),
+    batch_size: int = 16,
+    max_products: int = 1000,
+) -> dict:
+    """
+    Synchronously generate product embeddings (no Celery required).
+    
+    This endpoint runs the embedding generation directly and returns when complete.
+    Suitable for Cloud Scheduler or manual triggers.
+    
+    Args:
+        db: Database session
+        batch_size: Number of products to process per batch
+        max_products: Maximum number of products to process
+        
+    Returns:
+        Result summary with counts
+    """
+    try:
+        from sqlalchemy import text as sql_text
+        from ...ml.model_loader import model_registry
+        
+        logger.info("Starting synchronous embedding generation")
+        
+        # Get products without embeddings
+        result = db.execute(sql_text("""
+            SELECT DISTINCT
+                p.id,
+                p.product_name,
+                p.brand_name,
+                p.description,
+                p.colour,
+                p.fashion_size
+            FROM products p
+            LEFT JOIN product_embeddings pe ON p.id = pe.product_id AND pe.embedding_type = 'text'
+            WHERE p.is_duplicate = false AND pe.id IS NULL
+            ORDER BY p.id
+            LIMIT :max_products
+        """), {"max_products": max_products})
+        
+        products = [dict(row._mapping) for row in result]
+        total = len(products)
+        
+        logger.info(f"Found {total} products without embeddings")
+        
+        if total == 0:
+            return {
+                "status": "success",
+                "processed": 0,
+                "failed": 0,
+                "message": "All products already have embeddings"
+            }
+        
+        # Load CLIP model
+        logger.info("Loading CLIP model...")
+        model_registry.get_clip_model()
+        logger.info(f"Model loaded on {model_registry.get_device()}")
+        
+        # Process in batches
+        successful = 0
+        failed = 0
+        
+        for i in range(0, total, batch_size):
+            batch = products[i:i+batch_size]
+            batch_num = i // batch_size + 1
+            total_batches = (total + batch_size - 1) // batch_size
+            
+            logger.info(f"Processing batch {batch_num}/{total_batches} ({len(batch)} products)")
+            
+            try:
+                # Create text representations
+                texts = []
+                for p in batch:
+                    parts = []
+                    if p.get('product_name'):
+                        parts.append(p['product_name'])
+                    if p.get('brand_name'):
+                        parts.append(f"by {p['brand_name']}")
+                    if p.get('description'):
+                        desc = p['description']
+                        if len(desc) > 200:
+                            desc = desc[:197] + "..."
+                        parts.append(desc)
+                    texts.append(" ".join(parts))
+                
+                # Generate embeddings
+                embeddings = model_registry.encode_text_batch(texts)
+                
+                # Store in database
+                for product, embedding in zip(batch, embeddings):
+                    try:
+                        db.execute(sql_text("""
+                            INSERT INTO product_embeddings (
+                                product_id,
+                                embedding_type,
+                                embedding,
+                                model_version
+                            ) VALUES (
+                                :product_id,
+                                'text',
+                                :embedding,
+                                'ViT-B-32'
+                            )
+                            ON CONFLICT (product_id, embedding_type)
+                            DO UPDATE SET
+                                embedding = EXCLUDED.embedding,
+                                model_version = EXCLUDED.model_version,
+                                updated_at = now()
+                        """), {
+                            'product_id': product['id'],
+                            'embedding': embedding.tolist()
+                        })
+                        successful += 1
+                    except Exception as e:
+                        failed += 1
+                        logger.error(f"Failed for product {product['id']}: {e}")
+                
+                # Commit batch
+                db.commit()
+                logger.info(f"Batch {batch_num} complete ({successful}/{total} total)")
+                
+            except Exception as e:
+                db.rollback()
+                logger.error(f"Batch {batch_num} failed: {e}", exc_info=True)
+                failed += len(batch)
+        
+        logger.info(f"Completed: {successful} successful, {failed} failed")
+        return {
+            "status": "success",
+            "processed": successful,
+            "failed": failed,
+            "total": total,
+            "message": f"Generated embeddings for {successful} products"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to generate embeddings: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate embeddings: {str(e)}"
+        )
