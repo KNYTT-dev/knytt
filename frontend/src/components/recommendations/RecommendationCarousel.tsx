@@ -84,15 +84,6 @@ function CarouselCard({ product, userId, context, onLike, onAddToCart, onClick }
             </div>
           </div>
         </div>
-
-        {/* Stock Badge */}
-        {!product.in_stock && (
-          <div className="absolute top-3 left-3">
-            <span className="px-2 py-1 text-xs font-semibold bg-red-500 text-white rounded-full">
-              Out of Stock
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Product Info */}
