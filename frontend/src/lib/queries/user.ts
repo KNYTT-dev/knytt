@@ -10,16 +10,17 @@ import {
   UserPreferencesUpdate,
 } from "@/types/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+// Direct API call to Cloud Run backend (CORS enabled)
+const API_URL = "https://knytt-api-prod-kouzugqpra-uc.a.run.app";
 
 /**
  * Hook to get user statistics
  */
 export function useUserStats(userId: number | undefined) {
   return useQuery({
-    queryKey: ["user", "stats", userId],
+    queryKey: ["user", "stats", "me"],
     queryFn: async (): Promise<UserStatsResponse> => {
-      const response = await fetch(`${API_URL}/api/v1/users/${userId}/stats`, {
+      const response = await fetch(`${API_URL}/api/v1/users/me/stats`, {
         credentials: "include",
       });
 
@@ -43,14 +44,14 @@ export function useInteractionHistory(
   options?: { offset?: number; limit?: number }
 ) {
   return useQuery({
-    queryKey: ["user", "history", userId, options],
+    queryKey: ["user", "history", "me", options],
     queryFn: async (): Promise<InteractionHistoryResponse> => {
       const params = new URLSearchParams();
       if (options?.offset) params.append("offset", options.offset.toString());
       if (options?.limit) params.append("limit", options.limit.toString());
 
       const response = await fetch(
-        `${API_URL}/api/v1/users/${userId}/history?${params}`,
+        `${API_URL}/api/v1/users/me/history?${params}`,
         {
           credentials: "include",
         }
@@ -73,10 +74,10 @@ export function useInteractionHistory(
  */
 export function useFavorites(userId: number | undefined) {
   return useQuery({
-    queryKey: ["user", "favorites", userId],
+    queryKey: ["user", "favorites", "me"],
     queryFn: async (): Promise<FavoritesResponse> => {
       const response = await fetch(
-        `${API_URL}/api/v1/users/${userId}/favorites`,
+        `${API_URL}/api/v1/users/me/favorites`,
         {
           credentials: "include",
         }
@@ -106,7 +107,7 @@ export function useUpdatePreferences() {
       preferences: UserPreferencesUpdate;
     }) => {
       const response = await fetch(
-        `${API_URL}/api/v1/users/${data.userId}/preferences`,
+        `${API_URL}/api/v1/users/me/preferences`,
         {
           method: "PUT",
           headers: {
@@ -126,7 +127,7 @@ export function useUpdatePreferences() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["user", "stats", variables.userId],
+        queryKey: ["user", "stats", "me"],
       });
       queryClient.invalidateQueries({
         queryKey: ["recommendations", "feed", variables.userId],
@@ -144,7 +145,7 @@ export function useRemoveFavorite() {
   return useMutation({
     mutationFn: async (data: { userId: number; productId: string }) => {
       const response = await fetch(
-        `${API_URL}/api/v1/users/${data.userId}/favorites/${data.productId}`,
+        `${API_URL}/api/v1/users/me/favorites/${data.productId}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -158,9 +159,9 @@ export function useRemoveFavorite() {
 
       return response.json();
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["user", "favorites", variables.userId],
+        queryKey: ["user", "favorites", "me"],
       });
     },
   });

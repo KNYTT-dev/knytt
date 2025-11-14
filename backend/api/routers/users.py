@@ -48,7 +48,7 @@ async def get_user_favorites(
     product_ids = list(set([i.product_id for i in liked_interactions]))
 
     # Fetch product details
-    products = db.query(Product).filter(Product.product_id.in_(product_ids)).all()
+    products = db.query(Product).filter(Product.id.in_(product_ids)).all()
 
     # Create a map of product_id to liked_at timestamp
     liked_at_map = {i.product_id: i.created_at for i in liked_interactions}
@@ -58,14 +58,14 @@ async def get_user_favorites(
     for product in products:
         favorites.append(
             FavoriteProduct(
-                product_id=product.product_id,
-                title=product.title,
-                price=product.price,
-                currency=product.currency or "$",
-                image_url=product.image_url,
-                brand=product.brand,
-                in_stock=product.in_stock,
-                liked_at=liked_at_map.get(product.product_id, datetime.utcnow()),
+                product_id=str(product.id),
+                title=product.product_name,
+                price=float(product.search_price) if product.search_price else 0.0,
+                currency=product.currency or "GBP",
+                image_url=product.merchant_image_url or product.aw_image_url,
+                brand=product.brand_name,
+                in_stock=True,  # Default to True (in_stock not in Product model)
+                liked_at=liked_at_map.get(product.id, datetime.utcnow()),
             )
         )
 
@@ -84,12 +84,18 @@ async def remove_favorite(
     """
     Remove a product from favorites (unlike).
     """
+    # Convert string product_id to UUID
+    try:
+        product_uuid = UUID(product_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid product ID format")
+
     # Delete the LIKE interaction
     deleted_count = (
         db.query(UserInteraction)
         .filter(
             UserInteraction.user_id == current_user.id,
-            UserInteraction.product_id == product_id,
+            UserInteraction.product_id == product_uuid,
             UserInteraction.interaction_type == "like",
         )
         .delete()
@@ -117,7 +123,7 @@ async def get_interaction_history(
     # Base query
     query = (
         db.query(UserInteraction, Product)
-        .join(Product, UserInteraction.product_id == Product.product_id)
+        .join(Product, UserInteraction.product_id == Product.id)
         .filter(UserInteraction.user_id == current_user.id)
     )
 
@@ -137,10 +143,10 @@ async def get_interaction_history(
         interactions.append(
             InteractionHistoryItem(
                 interaction_id=interaction.id,
-                product_id=interaction.product_id,
-                product_title=product.title if product else None,
-                product_image_url=product.image_url if product else None,
-                product_price=product.price if product else None,
+                product_id=str(interaction.product_id),
+                product_title=product.product_name if product else None,
+                product_image_url=(product.merchant_image_url or product.aw_image_url) if product else None,
+                product_price=float(product.search_price) if (product and product.search_price) else None,
                 interaction_type=interaction.interaction_type,
                 created_at=interaction.created_at,
                 context=interaction.context,
