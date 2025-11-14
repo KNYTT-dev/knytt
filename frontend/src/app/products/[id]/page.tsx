@@ -4,10 +4,13 @@ import type { ProductResult } from "@/types/api";
 // Required for Cloudflare Pages deployment
 export const runtime = "edge";
 
+// Use production API URL by default for SSR in Edge Runtime
+// Rewrites don't work for server-side fetch in Cloudflare Pages Edge Runtime
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://knytt-api-prod-kouzugqpra-uc.a.run.app";
+
 async function getProduct(productId: string): Promise<ProductResult | null> {
   try {
-    // Use relative URL to leverage Next.js rewrite rule
-    const response = await fetch(`/api/v1/products/${productId}`, {
+    const response = await fetch(`${API_URL}/api/v1/products/${productId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
