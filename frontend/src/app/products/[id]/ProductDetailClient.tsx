@@ -39,8 +39,10 @@ export default function ProductDetailClient({
   useEffect(() => {
     if (!product && productId) {
       setIsLoading(true);
-      // Use relative URL to leverage Next.js rewrite rule
-      fetch(`/api/v1/products/${productId}`)
+      // Direct API call to Cloud Run backend (CORS enabled)
+      const API_URL = "https://knytt-api-prod-kouzugqpra-uc.a.run.app";
+
+      fetch(`${API_URL}/api/v1/products/${productId}`)
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return res.json();
