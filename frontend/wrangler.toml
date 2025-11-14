@@ -1,5 +1,5 @@
 # Cloudflare Pages Configuration
 name = "knytt-frontend"
-compatibility_flags = ["nodejs_compat"]
-compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat_v2"]
+compatibility_date = "2024-09-23"
 pages_build_output_dir = ".vercel/output/static"

@@ -1,6 +1,9 @@
 import ProductDetailClient from "./ProductDetailClient";
 import type { ProductResult } from "@/types/api";
 
+// Required for Cloudflare Pages deployment
+export const runtime = "edge";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 async function getProduct(productId: string): Promise<ProductResult | null> {
