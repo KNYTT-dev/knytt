@@ -88,16 +88,25 @@ async def record_feedback(
     embeddings_updated = False
     task_id = None
     if request.update_embeddings:
-        # Dispatch Celery task for async processing
-        from ...tasks.embeddings import update_user_embedding
+        try:
+            # Dispatch Celery task for async processing
+            from ...tasks.embeddings import update_user_embedding
 
-        result = update_user_embedding.delay(
-            user_external_id=str(request.user_id), max_interactions=50
-        )
-        task_id = result.id
-        embeddings_updated = True  # Marked as queued
+            result = update_user_embedding.delay(
+                user_external_id=str(request.user_id), max_interactions=50
+            )
+            task_id = result.id
+            embeddings_updated = True  # Marked as queued
 
-        logger.debug(f"Dispatched embedding update task {task_id} for user {request.user_id}")
+            logger.debug(f"Dispatched embedding update task {task_id} for user {request.user_id}")
+        except Exception as e:
+            # Redis/Celery not available (e.g., in Cloud Run without Redis)
+            # Continue without background embedding update
+            logger.warning(
+                f"Failed to dispatch embedding update task for user {request.user_id}: {e}. "
+                "Continuing without background update."
+            )
+            embeddings_updated = False
 
     # Step 5: Invalidate cached recommendations
     cache_invalidated = False
