@@ -111,6 +111,7 @@ class User(Base):
     interactions = relationship(
         "UserInteraction", back_populates="user", cascade="all, delete-orphan"
     )
+    favorites = relationship("UserFavorite", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, external_id={self.external_id})>"
@@ -261,6 +262,34 @@ class UserInteraction(Base):
         return f"<UserInteraction(id={self.id}, user_id={self.user_id}, product_id={self.product_id}, type={self.interaction_type})>"
 
 
+class UserFavorite(Base):
+    """
+    User Favorites model.
+
+    Stores user-product favorite relationships (liked products).
+    This is separate from UserInteraction to track persistent favorites.
+    """
+
+    __tablename__ = "user_favorites"
+
+    user_id = Column(
+        PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    product_id = Column(
+        PGUUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), primary_key=True
+    )
+
+    # Metadata
+    created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
+
+    # Relationships
+    user = relationship("User", back_populates="favorites")
+    product = relationship("Product", back_populates="favorited_by")
+
+    def __repr__(self):
+        return f"<UserFavorite(user_id={self.user_id}, product_id={self.product_id})>"
+
+
 class Product(Base):
     """
     Product model.
@@ -363,6 +392,7 @@ class Product(Base):
     embeddings_rel = relationship(
         "ProductEmbedding", back_populates="product", cascade="all, delete-orphan"
     )
+    favorited_by = relationship("UserFavorite", back_populates="product", cascade="all, delete-orphan")
 
     # Unique constraint
     __table_args__ = (

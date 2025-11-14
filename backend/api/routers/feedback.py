@@ -233,6 +233,23 @@ def _store_interaction(request: FeedbackRequest, db: Session) -> Optional[str]:
         db.commit()
         db.refresh(interaction)
 
+        # If it's a like interaction, also add to user_favorites
+        if request.interaction_type.value == "like":
+            from ...db.models import UserFavorite
+
+            # Check if favorite already exists (upsert logic)
+            existing_favorite = db.execute(
+                select(UserFavorite).where(
+                    UserFavorite.user_id == user.id, UserFavorite.product_id == product.id
+                )
+            ).scalar_one_or_none()
+
+            if not existing_favorite:
+                favorite = UserFavorite(user_id=user.id, product_id=product.id)
+                db.add(favorite)
+                db.commit()
+                logger.info(f"Added to favorites: user={user.id}, product={product.id}")
+
         # Update user stats
         user.total_interactions += 1
         user.last_active = datetime.utcnow()

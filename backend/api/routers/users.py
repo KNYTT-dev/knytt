@@ -34,28 +34,20 @@ async def get_user_favorites(
     """
     Get all products the user has liked/favorited.
     """
-    # Query for all LIKE interactions
-    liked_interactions = (
-        db.query(UserInteraction)
-        .filter(
-            UserInteraction.user_id == current_user.id, UserInteraction.interaction_type == "like"
-        )
-        .order_by(desc(UserInteraction.created_at))
+    from ...db.models import UserFavorite
+
+    # Query favorites with joined products
+    favorites_query = (
+        db.query(UserFavorite, Product)
+        .join(Product, UserFavorite.product_id == Product.id)
+        .filter(UserFavorite.user_id == current_user.id)
+        .order_by(desc(UserFavorite.created_at))
         .all()
     )
 
-    # Get unique product IDs
-    product_ids = list(set([i.product_id for i in liked_interactions]))
-
-    # Fetch product details
-    products = db.query(Product).filter(Product.id.in_(product_ids)).all()
-
-    # Create a map of product_id to liked_at timestamp
-    liked_at_map = {i.product_id: i.created_at for i in liked_interactions}
-
     # Build response
     favorites = []
-    for product in products:
+    for favorite, product in favorites_query:
         favorites.append(
             FavoriteProduct(
                 product_id=str(product.id),
@@ -65,12 +57,9 @@ async def get_user_favorites(
                 image_url=product.merchant_image_url or product.aw_image_url,
                 brand=product.brand_name,
                 in_stock=True,  # Default to True (in_stock not in Product model)
-                liked_at=liked_at_map.get(product.id, datetime.utcnow()),
+                liked_at=favorite.created_at,
             )
         )
-
-    # Sort by liked_at descending
-    favorites.sort(key=lambda x: x.liked_at, reverse=True)
 
     return FavoritesResponse(favorites=favorites, total=len(favorites))
 
@@ -84,19 +73,20 @@ async def remove_favorite(
     """
     Remove a product from favorites (unlike).
     """
+    from ...db.models import UserFavorite
+
     # Convert string product_id to UUID
     try:
         product_uuid = UUID(product_id)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid product ID format")
 
-    # Delete the LIKE interaction
+    # Delete from user_favorites
     deleted_count = (
-        db.query(UserInteraction)
+        db.query(UserFavorite)
         .filter(
-            UserInteraction.user_id == current_user.id,
-            UserInteraction.product_id == product_uuid,
-            UserInteraction.interaction_type == "like",
+            UserFavorite.user_id == current_user.id,
+            UserFavorite.product_id == product_uuid,
         )
         .delete()
     )
