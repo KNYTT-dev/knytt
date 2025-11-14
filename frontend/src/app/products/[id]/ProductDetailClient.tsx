@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Share2, Loader2, AlertCircle } from "lucide-react";
 import { useTrackInteraction } from "@/lib/queries/feedback";
 import { InteractionType } from "@/types/enums";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ProductImageGallery,
@@ -23,14 +23,39 @@ interface ProductDetailClientProps {
 }
 
 export default function ProductDetailClient({
-  product,
-  isLoading,
+  product: initialProduct,
+  isLoading: initialLoading,
   productId,
 }: ProductDetailClientProps) {
   const router = useRouter();
   const feedbackMutation = useTrackInteraction();
   const { user } = useAuth();
   const userId = user?.id;
+
+  const [product, setProduct] = useState<ProductResult | null>(initialProduct);
+  const [isLoading, setIsLoading] = useState(initialLoading);
+
+  // Fetch product data client-side if not provided via SSR
+  useEffect(() => {
+    if (!product && productId) {
+      setIsLoading(true);
+      // Use relative URL to leverage Next.js rewrite rule
+      fetch(`/api/v1/products/${productId}`)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          setProduct(data);
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching product:", error);
+          setProduct(null);
+          setIsLoading(false);
+        });
+    }
+  }, [productId, product]);
 
   // Track product view on page load
   useEffect(() => {
