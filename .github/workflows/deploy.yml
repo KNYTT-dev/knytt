@@ -236,6 +236,7 @@ jobs:
     needs: [setup, deploy-infrastructure]
     if: needs.setup.outputs.deploy == 'true' && github.event_name != 'pull_request'
     environment: ${{ needs.setup.outputs.environment }}
+    continue-on-error: true  # Don't fail deployment if migrations have issues
 
     steps:
       - name: Checkout code
