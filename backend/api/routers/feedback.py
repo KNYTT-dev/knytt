@@ -208,7 +208,6 @@ def _store_interaction(request: FeedbackRequest, db: Session) -> Optional[str]:
             )
 
         # Create interaction record
-        # NOTE: query and position fields omitted until database migration is run
         interaction = UserInteraction(
             user_id=user.id,
             product_id=product.id,
@@ -216,6 +215,8 @@ def _store_interaction(request: FeedbackRequest, db: Session) -> Optional[str]:
             rating=request.rating,
             session_id=request.session_id,
             context=request.context,
+            query=request.query,
+            position=request.position,
             interaction_metadata=request.metadata or {},
         )
 
