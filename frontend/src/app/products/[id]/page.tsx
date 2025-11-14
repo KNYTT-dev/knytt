@@ -1,7 +1,7 @@
 import ProductDetailClient from "./ProductDetailClient";
 
-// No Edge Runtime - use default Node.js runtime for better compatibility
-// Client component will handle data fetching
+// Required for Cloudflare Pages deployment
+export const runtime = "edge";
 
 export default async function ProductDetailPage({
   params,
@@ -10,6 +10,6 @@ export default async function ProductDetailPage({
 }) {
   const { id } = await params;
 
-  // Pass null for product - client component will fetch it
+  // Client component fetches product data directly from API
   return <ProductDetailClient product={null} isLoading={true} productId={id} />;
 }
