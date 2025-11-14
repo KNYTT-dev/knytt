@@ -75,15 +75,6 @@ function MasonryCard({ product, userId, onLike, onAddToCart, onClick }: MasonryC
             </div>
           </div>
         </div>
-
-        {/* Stock Badge */}
-        {!product.in_stock && (
-          <div className="absolute top-4 left-4">
-            <span className="px-3 py-1 text-xs font-semibold bg-red-500 text-white rounded-full">
-              Out of Stock
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Product Info */}
