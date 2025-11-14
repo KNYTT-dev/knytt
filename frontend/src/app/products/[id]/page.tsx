@@ -4,11 +4,10 @@ import type { ProductResult } from "@/types/api";
 // Required for Cloudflare Pages deployment
 export const runtime = "edge";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
-
 async function getProduct(productId: string): Promise<ProductResult | null> {
   try {
-    const response = await fetch(`${API_URL}/api/v1/products/${productId}`, {
+    // Use relative URL to leverage Next.js rewrite rule
+    const response = await fetch(`/api/v1/products/${productId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
