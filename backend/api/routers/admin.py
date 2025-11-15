@@ -8,7 +8,7 @@ GET /admin/task-status/{task_id} - Check Celery task status
 """
 
 import logging
-import os
+import os  # GCS upload requires google-cloud-storage package
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
