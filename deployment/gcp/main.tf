@@ -400,6 +400,16 @@ resource "google_cloud_run_v2_service" "api" {
         }
       }
 
+      env {
+        name  = "GCS_FAISS_INDEX_BUCKET"
+        value = google_storage_bucket.ml_artifacts.name
+      }
+
+      env {
+        name  = "GCS_FAISS_INDEX_PATH"
+        value = "faiss_index"
+      }
+
       startup_probe {
         http_get {
           path = "/health"
