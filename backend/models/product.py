@@ -223,7 +223,11 @@ class ProductIngestion(BaseModel):
     @field_validator("in_stock", mode="before")
     @classmethod
     def parse_in_stock(cls, v):
-        """Parse various in_stock representations."""
+        """Parse various in_stock representations.
+
+        Since affiliate products often lack accurate stock data, we default to 'in stock'
+        for any unrecognized values. Only explicit out-of-stock indicators return 'no'.
+        """
         if v is None:
             return None
 
@@ -233,8 +237,12 @@ class ProductIngestion(BaseModel):
                 return "yes"
             elif v_lower in ["0", "false", "no", "n", "out of stock", "unavailable"]:
                 return "no"
+            # Default unrecognized values (like "unknown", "N/A", "limited") to "yes"
+            # since we can't verify stock for affiliate products
+            return "yes"
 
-        return str(v) if v else None
+        # Non-string values default to in-stock
+        return "yes" if v else None
 
     @field_validator("stock_quantity", mode="before")
     @classmethod
