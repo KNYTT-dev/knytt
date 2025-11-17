@@ -10,8 +10,8 @@ import {
   UserPreferencesUpdate,
 } from "@/types/api";
 
-// Direct API call to Cloud Run backend (CORS enabled)
-const API_URL = "https://knytt-api-prod-kouzugqpra-uc.a.run.app";
+// Use environment variable for API URL (defaults to localhost for development)
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 /**
  * Hook to get user statistics

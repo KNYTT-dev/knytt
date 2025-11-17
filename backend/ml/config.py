@@ -3,7 +3,12 @@ ML Configuration
 Centralized configuration for embedding generation, model loading, and user modeling.
 """
 
+# CRITICAL: Set PyTorch environment variables BEFORE importing torch
+# This fixes CLIP model loading hang on Apple Silicon (macOS)
 import os
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "0"
+os.environ["ML_DEVICE"] = "cpu"
+
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -165,7 +170,7 @@ class StorageConfig:
     rebuild_index_interval_hours: int = 6  # Rebuild FAISS index every 6 hours
 
     # Redis configuration for user embeddings
-    redis_host: str = field(default_factory=lambda: os.getenv("REDIS_HOST", "redis"))
+    redis_host: str = field(default_factory=lambda: os.getenv("REDIS_HOST", "localhost"))
     redis_port: int = field(default_factory=lambda: int(os.getenv("REDIS_PORT", "6379")))
     redis_password: Optional[str] = field(default_factory=lambda: os.getenv("REDIS_PASSWORD"))
     redis_db: int = 1  # Separate DB for embeddings

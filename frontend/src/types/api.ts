@@ -57,7 +57,7 @@ export interface RecommendRequest {
   context?: RecommendationContext; // Default: "feed"
 
   // Context-specific parameters (required based on context)
-  product_id?: string; // Required if context="similar"
+  product_id?: string; // Required if context="similar" - UUID string
   category_id?: number; // Required if context="category"
   search_query?: string; // Required if context="search"
 

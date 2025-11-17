@@ -6,7 +6,7 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { SearchResponse } from "@/types/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface DiscoverParams {
   limit?: number;

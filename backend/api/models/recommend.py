@@ -42,8 +42,8 @@ class RecommendRequest(BaseModel):
     )
 
     # Context-specific parameters
-    product_id: Optional[int] = Field(
-        None, description="Product ID for similar item recommendations (context=similar)"
+    product_id: Optional[str] = Field(
+        None, description="Product ID (UUID) for similar item recommendations (context=similar)"
     )
     category_id: Optional[int] = Field(
         None, description="Category ID for category recommendations (context=category)"

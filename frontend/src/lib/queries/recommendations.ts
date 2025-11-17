@@ -6,7 +6,7 @@ import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { RecommendRequest, RecommendResponse } from "@/types/api";
 import { RecommendationContext } from "@/types/enums";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 /**
  * Hook to get personalized feed recommendations
@@ -68,7 +68,7 @@ export function useSimilarProducts(
       const request: RecommendRequest = {
         user_id: userId!,
         context: RecommendationContext.SIMILAR,
-        product_id: productId!,
+        product_id: productId,
         limit: 12,
       };
 

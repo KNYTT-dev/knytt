@@ -216,9 +216,28 @@ async def complete_onboarding(
             product_embeddings_dict=product_embeddings_dict,
         )
 
-        # Save the embedding to database and cache
+        # Use current_user directly - it's already attached to the db session
+        # No need to re-query since get_current_user uses the same db session
+        
+        # Update user preferences first (before creating embedding)
+        if request.price_min is not None:
+            current_user.price_band_min = request.price_min
+        if request.price_max is not None:
+            current_user.price_band_max = request.price_max
+
+        # Mark user as onboarded (do this BEFORE saving embedding)
+        current_user.onboarded = True
+        current_user.updated_at = datetime.utcnow()
+        
+        # Flush to make user changes visible within this transaction (but don't commit yet)
+        # This makes the user record visible to the foreign key check without ending the transaction
+        logger.info(f"Flushing user changes for {current_user.id}")
+        db.flush()
+        logger.info(f"User changes flushed, user {current_user.id} now visible in transaction")
+
+        # Now save the embedding to database (still in the same transaction)
         embedding_builder = UserEmbeddingBuilder(db, cache)
-        saved = embedding_builder.save_user_embedding(
+        embedding_builder.save_user_embedding(
             user_id=current_user.id,
             embedding=embedding_result["user_embedding"],
             embedding_type="long_term",  # Initialize as long-term profile
@@ -229,16 +248,8 @@ async def complete_onboarding(
                 "created_at": datetime.utcnow().isoformat(),
             },
         )
-
-        # Update user preferences
-        if request.price_min is not None:
-            current_user.price_band_min = request.price_min
-        if request.price_max is not None:
-            current_user.price_band_max = request.price_max
-
-        # Mark user as onboarded
-        current_user.onboarded = True
-        current_user.updated_at = datetime.utcnow()
+        
+        logger.info(f"Embedding saved to session for user {current_user.id}")
 
         # Also track these as initial interactions (likes)
         for product_id in request.selected_product_ids:
@@ -251,14 +262,17 @@ async def complete_onboarding(
             )
             db.add(interaction)
 
-        # Commit all changes
+        # CRITICAL: Commit everything together in ONE transaction
+        # This ensures all changes (user, embedding, interactions) are committed atomically
+        logger.info(f"Committing all changes (user, embedding, interactions) for user {current_user.id}")
         db.commit()
+        logger.info(f"All changes committed successfully for user {current_user.id}")
 
         return OnboardingCompleteResponse(
             success=True,
             user_id=str(current_user.id),
             onboarded=True,
-            embedding_created=saved,
+            embedding_created=True,
             preferences_saved=True,
             selected_products_count=len(request.selected_product_ids),
             message="Onboarding completed successfully! Your style profile has been created.",
@@ -273,8 +287,13 @@ async def complete_onboarding(
     except HTTPException:
         raise
     except Exception as e:
+        # Try to get user_id from current_user
+        try:
+            user_id_str = str(current_user.id)
+        except:
+            user_id_str = "unknown"
         logger.error(
-            f"Failed to complete onboarding for user {current_user.id}: {e}", exc_info=True
+            f"Failed to complete onboarding for user {user_id_str}: {e}", exc_info=True
         )
         db.rollback()
         raise HTTPException(

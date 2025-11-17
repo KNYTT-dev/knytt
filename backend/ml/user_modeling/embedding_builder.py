@@ -289,52 +289,50 @@ class UserEmbeddingBuilder:
         from ...db.models import UserEmbedding
 
         try:
-            # Check if embedding exists
-            query = select(UserEmbedding).where(
-                and_(
-                    UserEmbedding.user_id == user_id, UserEmbedding.embedding_type == embedding_type
-                )
-            )
+            # Check if embedding record exists for this user
+            query = select(UserEmbedding).where(UserEmbedding.user_id == user_id)
             existing = self.db.execute(query).scalar_one_or_none()
 
             if existing:
-                # Update existing
+                # Update existing record
                 if embedding_type == "long_term":
                     existing.long_term_embedding = embedding.tolist()
+                    existing.long_term_updated_at = datetime.utcnow()
                 elif embedding_type == "session":
                     existing.session_embedding = embedding.tolist()
+                    existing.session_updated_at = datetime.utcnow()
+                    existing.session_started_at = existing.session_started_at or datetime.utcnow()
 
                 existing.updated_at = datetime.utcnow()
-                existing.last_interaction_at = datetime.utcnow()
+                existing.last_active_at = datetime.utcnow()
 
                 if metadata:
-                    existing.interaction_count = metadata.get(
-                        "processed_count", existing.interaction_count
-                    )
-                    existing.confidence_score = metadata.get(
-                        "confidence", existing.confidence_score
+                    existing.total_interactions = metadata.get(
+                        "processed_count", existing.total_interactions
                     )
 
                 logger.info(f"Updated {embedding_type} embedding for user {user_id}")
 
             else:
-                # Create new
+                # Create new record
                 user_embedding = UserEmbedding(
                     user_id=user_id,
-                    embedding_type=embedding_type,
                     long_term_embedding=(
                         embedding.tolist() if embedding_type == "long_term" else None
                     ),
                     session_embedding=embedding.tolist() if embedding_type == "session" else None,
-                    last_interaction_at=datetime.utcnow(),
-                    interaction_count=metadata.get("processed_count", 0) if metadata else 0,
-                    confidence_score=metadata.get("confidence", 0.5) if metadata else 0.5,
+                    long_term_updated_at=datetime.utcnow() if embedding_type == "long_term" else None,
+                    session_updated_at=datetime.utcnow() if embedding_type == "session" else None,
+                    session_started_at=datetime.utcnow() if embedding_type == "session" else None,
+                    last_active_at=datetime.utcnow(),
+                    total_interactions=metadata.get("processed_count", 0) if metadata else 0,
                 )
 
                 self.db.add(user_embedding)
                 logger.info(f"Created new {embedding_type} embedding for user {user_id}")
 
-            self.db.commit()
+            # Note: We don't commit here - let the caller handle the transaction
+            # This allows the caller to commit multiple operations atomically
 
             # Update cache if available
             if self.cache:
@@ -357,9 +355,10 @@ class UserEmbeddingBuilder:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to save user embedding: {e}")
-            self.db.rollback()
-            return False
+            logger.error(f"Failed to save user embedding: {e}", exc_info=True)
+            # Don't rollback here - let the caller handle transaction management
+            # Re-raise the exception so the caller knows something went wrong
+            raise
 
     def update_user_embedding(
         self, user_id: UUID, max_interactions: int = 50
@@ -407,6 +406,9 @@ class UserEmbeddingBuilder:
                 embedding_type="long_term",
                 metadata=metadata,
             )
+
+            # Commit the transaction
+            self.db.commit()
 
             return success, metadata
 

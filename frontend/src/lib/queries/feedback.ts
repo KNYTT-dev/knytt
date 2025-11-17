@@ -6,8 +6,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FeedbackRequest, FeedbackResponse } from "@/types/api";
 import { InteractionType } from "@/types/enums";
 
-// Direct API call to Cloud Run backend (CORS enabled)
-const API_URL = "https://knytt-api-prod-kouzugqpra-uc.a.run.app";
+// Use environment variable for API URL (defaults to production if not set)
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://knytt-api-prod-kouzugqpra-uc.a.run.app";
 
 /**
  * Hook to track user interactions with products

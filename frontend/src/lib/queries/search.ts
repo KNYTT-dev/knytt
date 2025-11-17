@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-query";
 import { SearchRequest, SearchResponse, ProductResult } from "@/types/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 /**
  * Hook to search for products
