@@ -109,17 +109,18 @@ async def remove_favorite(
     db.commit()
 
     # Trigger user embedding update (async via Celery)
+    logger.info(f"Attempting to dispatch Celery task for user {current_user.id} after unlike")
     try:
         from ...tasks.embeddings import update_user_embedding
         
-        update_user_embedding.delay(
+        result = update_user_embedding.delay(
             user_id=str(current_user.id),
             max_interactions=50
         )
-        logger.debug(f"Dispatched embedding update for user {current_user.id} after unlike")
+        logger.info(f"✓ Dispatched Celery task {result.id} to update embeddings for user {current_user.id} after unlike")
     except Exception as e:
         # Don't fail the request if Celery is unavailable
-        logger.warning(f"Failed to dispatch embedding update: {e}")
+        logger.warning(f"Failed to dispatch embedding update for user {current_user.id}: {e}. Continuing without background update.")
 
     return None
 
