@@ -463,7 +463,9 @@ def update_user_embedding(
                 try:
                     if cache:
                         # Get all recommendation cache keys
-                        all_keys = cache.redis_client.keys("recommend:*")
+                        # Access the Redis client through cache.redis._get_client()
+                        redis_client = cache.redis._get_client()
+                        all_keys = redis_client.keys("recommend:*")
                         deleted = 0
                         
                         for key in all_keys:
@@ -474,12 +476,12 @@ def update_user_embedding(
                             key_str = key.decode('utf-8') if isinstance(key, bytes) else key
                             if key_str.startswith("recommend:"):
                                 try:
-                                    cache.redis_client.delete(key)
+                                    redis_client.delete(key)
                                     deleted += 1
                                 except:
                                     pass
                         
-                        logger.info(f"Invalidated {deleted} recommendation cache entries after embedding update for user {user_id}")
+                        logger.info(f"✓ Invalidated {deleted} recommendation cache entries after embedding update for user {user_id}")
                 except Exception as e:
                     logger.warning(f"Failed to invalidate cache for user {user_id}: {e}")
                 
