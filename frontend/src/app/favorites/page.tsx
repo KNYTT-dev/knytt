@@ -13,7 +13,7 @@ export default function FavoritesPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const userId = user?.id;
   const { data: favorites, isLoading: favoritesLoading } = useFavorites(
-    userId ? Number(userId) : undefined
+    userId // useFavorites uses auth cookie, userId just enables the query
   );
   const removeFavorite = useRemoveFavorite();
   const feedbackMutation = useTrackInteraction();
@@ -27,8 +27,22 @@ export default function FavoritesPage() {
   const handleRemoveFavorite = (productId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!userId) return;
-    removeFavorite.mutate({ userId: Number(userId), productId });
+    if (!userId) {
+      console.error("Cannot remove favorite: No user ID");
+      return;
+    }
+    console.log("Removing favorite:", { userId, productId });
+    removeFavorite.mutate(
+      { userId, productId },
+      {
+        onSuccess: () => {
+          console.log("Favorite removed successfully");
+        },
+        onError: (error) => {
+          console.error("Failed to remove favorite:", error);
+        },
+      }
+    );
   };
 
   const handleAddToCart = (productId: string, e: React.MouseEvent) => {
@@ -102,67 +116,71 @@ export default function FavoritesPage() {
         {favorites && favorites.total > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {favorites.favorites.map((product) => (
-              <Link
+              <div
                 key={product.product_id}
-                href={`/products/${product.product_id}`}
-                onClick={() => handleClick(product.product_id)}
                 className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
               >
-                {/* Image */}
-                <div className="relative aspect-[3/4] overflow-hidden bg-blush">
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-sage">
-                      No image
-                    </div>
-                  )}
+                {/* Remove Button - Outside Link */}
+                <button
+                  onClick={(e) => handleRemoveFavorite(product.product_id, e)}
+                  disabled={removeFavorite.isPending}
+                  className="absolute top-3 right-3 p-2.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-lg z-10"
+                  aria-label="Remove from favorites"
+                >
+                  <Trash2 className="w-5 h-5 text-red-500" />
+                </button>
 
-                  {/* Remove Button */}
-                  <button
-                    onClick={(e) => handleRemoveFavorite(product.product_id, e)}
-                    disabled={removeFavorite.isPending}
-                    className="absolute top-3 right-3 p-2.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-lg"
-                    aria-label="Remove from favorites"
-                  >
-                    <Trash2 className="w-5 h-5 text-red-500" />
-                  </button>
-
-                  {/* Overlay Actions */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                      {/* Price */}
-                      <div className="text-white">
-                        <p className="text-2xl font-bold">
-                          {product.currency}
-                          {product.price.toFixed(2)}
-                        </p>
+                {/* Link wraps the content */}
+                <Link
+                  href={`/products/${product.product_id}`}
+                  onClick={() => handleClick(product.product_id)}
+                  className="block"
+                >
+                  {/* Image */}
+                  <div className="relative aspect-[3/4] overflow-hidden bg-blush">
+                    {product.image_url ? (
+                      <img
+                        src={product.image_url}
+                        alt={product.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-sage">
+                        No image
                       </div>
+                    )}
 
-                      {/* Add to Cart Button */}
-                      <button
-                        onClick={(e) => handleAddToCart(product.product_id, e)}
-                        disabled={!product.in_stock}
-                        className="p-2.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors disabled:opacity-50"
-                        aria-label="Add to cart"
-                      >
-                        <ShoppingCart
-                          className={`w-5 h-5 ${
-                            product.in_stock ? "text-sage" : "text-gray-400"
-                          }`}
-                        />
-                      </button>
+                    {/* Overlay Actions */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                        {/* Price */}
+                        <div className="text-white">
+                          <p className="text-2xl font-bold">
+                            {product.currency}
+                            {product.price.toFixed(2)}
+                          </p>
+                        </div>
+
+                        {/* Add to Cart Button */}
+                        <button
+                          onClick={(e) => handleAddToCart(product.product_id, e)}
+                          disabled={!product.in_stock}
+                          className="p-2.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors disabled:opacity-50"
+                          aria-label="Add to cart"
+                        >
+                          <ShoppingCart
+                            className={`w-5 h-5 ${
+                              product.in_stock ? "text-sage" : "text-gray-400"
+                            }`}
+                          />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Product Info */}
-                <div className="p-4">
+                  {/* Product Info */}
+                  <div className="p-4">
                   {/* Brand */}
                   {product.brand && (
                     <p className="text-xs text-sage uppercase tracking-wide mb-1 font-medium">
@@ -181,6 +199,7 @@ export default function FavoritesPage() {
                   </p>
                 </div>
               </Link>
+              </div>
             ))}
           </div>
         )}

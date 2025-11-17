@@ -46,13 +46,13 @@ export function useTrackInteraction() {
       // Invalidate favorites if it's a like/unlike interaction
       if (data.interaction_type === "like" || data.interaction_type === "unlike") {
         queryClient.invalidateQueries({
-          queryKey: ["user", "favorites", data.user_id],
+          queryKey: ["user", "favorites", "me"],
         });
       }
 
       // Invalidate history
       queryClient.invalidateQueries({
-        queryKey: ["user", "history", data.user_id],
+        queryKey: ["user", "history", "me"],
       });
     },
   });

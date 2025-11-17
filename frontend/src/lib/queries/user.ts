@@ -16,7 +16,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 /**
  * Hook to get user statistics
  */
-export function useUserStats(userId: number | undefined) {
+export function useUserStats(userId: string | undefined) {
   return useQuery({
     queryKey: ["user", "stats", "me"],
     queryFn: async (): Promise<UserStatsResponse> => {
@@ -40,7 +40,7 @@ export function useUserStats(userId: number | undefined) {
  * Hook to get user interaction history
  */
 export function useInteractionHistory(
-  userId: number | undefined,
+  userId: string | undefined,
   options?: { offset?: number; limit?: number }
 ) {
   return useQuery({
@@ -72,7 +72,7 @@ export function useInteractionHistory(
 /**
  * Hook to get user favorites
  */
-export function useFavorites(userId: number | undefined) {
+export function useFavorites(userId: string | undefined) {
   return useQuery({
     queryKey: ["user", "favorites", "me"],
     queryFn: async (): Promise<FavoritesResponse> => {
@@ -103,7 +103,7 @@ export function useUpdatePreferences() {
 
   return useMutation({
     mutationFn: async (data: {
-      userId: number;
+      userId: string;
       preferences: UserPreferencesUpdate;
     }) => {
       const response = await fetch(
@@ -126,6 +126,10 @@ export function useUpdatePreferences() {
       return response.json();
     },
     onSuccess: (_, variables) => {
+      // Invalidate auth query to refresh user object with new preferences
+      queryClient.invalidateQueries({
+        queryKey: ["auth", "me"],
+      });
       queryClient.invalidateQueries({
         queryKey: ["user", "stats", "me"],
       });
@@ -143,7 +147,8 @@ export function useRemoveFavorite() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { userId: number; productId: string }) => {
+    mutationFn: async (data: { userId: string; productId: string }) => {
+      console.log("useRemoveFavorite: Sending DELETE request", data);
       const response = await fetch(
         `${API_URL}/api/v1/users/me/favorites/${data.productId}`,
         {
@@ -152,14 +157,20 @@ export function useRemoveFavorite() {
         }
       );
 
+      console.log("useRemoveFavorite: Response status", response.status);
+
       if (!response.ok) {
         const error = await response.json();
+        console.error("useRemoveFavorite: Error response", error);
         throw new Error(error.message || "Failed to remove favorite");
       }
 
-      return response.json();
+      // 204 No Content - no response body to parse
+      console.log("useRemoveFavorite: Success - favorite removed");
+      return null;
     },
     onSuccess: () => {
+      console.log("useRemoveFavorite: Invalidating favorites query");
       queryClient.invalidateQueries({
         queryKey: ["user", "favorites", "me"],
       });

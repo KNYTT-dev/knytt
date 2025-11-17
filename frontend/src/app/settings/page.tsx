@@ -23,9 +23,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const userId = user?.id;
-  const { data: stats, isLoading: statsLoading } = useUserStats(
-    userId ? Number(userId) : undefined
-  );
+  const { data: stats, isLoading: statsLoading } = useUserStats(userId);
   const updatePreferences = useUpdatePreferences();
 
   const [activeTab, setActiveTab] = useState<TabType>("profile");
@@ -40,12 +38,29 @@ export default function SettingsPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
+  // Load user preferences into form fields
+  useEffect(() => {
+    if (user) {
+      // Load preferred categories
+      if (user.preferred_categories && Array.isArray(user.preferred_categories)) {
+        setPreferredCategories(user.preferred_categories);
+      }
+      // Load price range
+      if (user.price_band_min !== null && user.price_band_min !== undefined) {
+        setPriceMin(user.price_band_min.toString());
+      }
+      if (user.price_band_max !== null && user.price_band_max !== undefined) {
+        setPriceMax(user.price_band_max.toString());
+      }
+    }
+  }, [user]);
+
   const handleSavePreferences = () => {
     if (!userId) return;
     updatePreferences.mutate({
-      userId: Number(userId),
+      userId,
       preferences: {
-        preferred_categories: preferredCategories.length > 0 ? preferredCategories : undefined,
+        preferred_categories: preferredCategories, // Always send the array (even if empty)
         price_band_min: priceMin ? parseFloat(priceMin) : undefined,
         price_band_max: priceMax ? parseFloat(priceMax) : undefined,
       },

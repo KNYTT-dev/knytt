@@ -104,7 +104,7 @@ function MasonryCard({ product, userId, onLike, onAddToCart, onClick }: MasonryC
 
 interface MasonryGridProps {
   products: ProductResult[];
-  userId?: number;
+  userId?: string;
 }
 
 export function MasonryGrid({ products, userId }: MasonryGridProps) {

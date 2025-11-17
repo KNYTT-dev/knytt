@@ -8,12 +8,16 @@
  * This represents the authenticated user in the frontend.
  */
 export interface User {
-  id: number;
+  id: string; // UUID
   email: string;
   created_at: string; // ISO 8601 timestamp
   onboarded: boolean; // Has completed onboarding quiz
   display_name?: string;
   avatar_url?: string;
+  // User preferences
+  preferred_categories?: string[];
+  price_band_min?: number;
+  price_band_max?: number;
 }
 
 /**

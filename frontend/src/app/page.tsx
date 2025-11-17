@@ -63,7 +63,7 @@ export default function HomePage() {
                   <RecommendationCarousel
                     title=""
                     products={recommendedData.results}
-                    userId={userId ? Number(userId) : undefined}
+                    userId={userId}
                     context="homepage_recommendations"
                   />
                 </div>
@@ -98,7 +98,7 @@ export default function HomePage() {
 
           {/* Products Masonry Grid */}
           {data && data.results.length > 0 && (
-            <MasonryGrid products={data.results} userId={userId ? Number(userId) : undefined} />
+            <MasonryGrid products={data.results} userId={userId} />
           )}
 
           {/* Empty State */}
