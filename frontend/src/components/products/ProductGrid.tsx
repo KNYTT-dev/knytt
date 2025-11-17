@@ -6,7 +6,7 @@ import { ProductSkeleton } from "./ProductSkeleton";
 
 interface ProductGridProps {
   products: ProductResult[];
-  userId?: number;
+  userId?: string; // UUID string
   isLoading?: boolean;
   onProductClick?: (productId: string) => void;
   columns?: 2 | 3 | 4;
