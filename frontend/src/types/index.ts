@@ -22,3 +22,6 @@ export * from "./user";
 
 // Cart types
 export * from "./cart";
+
+// Board types
+export * from "./board";
