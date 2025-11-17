@@ -12,11 +12,22 @@ export default function FavoritesPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const userId = user?.id;
-  const { data: favorites, isLoading: favoritesLoading } = useFavorites(
+  const { data: favorites, isLoading: favoritesLoading, error: favoritesError } = useFavorites(
     userId // useFavorites uses auth cookie, userId just enables the query
   );
   const removeFavorite = useRemoveFavorite();
   const feedbackMutation = useTrackInteraction();
+
+  // Debug logging
+  console.log("FavoritesPage:", {
+    user,
+    userId,
+    isAuthenticated,
+    authLoading,
+    favoritesLoading,
+    favorites,
+    favoritesError,
+  });
 
   // Redirect to login if not authenticated
   if (!authLoading && !isAuthenticated) {
@@ -73,6 +84,28 @@ export default function FavoritesPage() {
         <div className="container mx-auto px-4 py-12">
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 text-sage animate-spin" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if query failed
+  if (favoritesError) {
+    return (
+      <div className="min-h-screen bg-ivory">
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center py-20">
+            <div className="text-red-500 mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Failed to load favorites</h2>
+              <p className="text-sage">{favoritesError.message}</p>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-block px-6 py-3 bg-terracotta text-white rounded-full hover:bg-terracotta/90 transition-colors"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </div>
