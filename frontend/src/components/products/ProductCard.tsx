@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Heart, ShoppingCart } from "lucide-react";
 import { ProductResult } from "@/types/api";
 import { InteractionType } from "@/types/enums";
 import { useTrackInteraction } from "@/lib/queries/feedback";
+import { useFavorites } from "@/lib/queries/user";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useToast } from "@/components/ui/Toast";
 import Tooltip from "@/components/ui/Tooltip";
@@ -24,6 +25,19 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
   const feedbackMutation = useTrackInteraction();
   const addToCart = useCartStore((state) => state.addItem);
   const toast = useToast();
+  
+  // Fetch user's favorites to check if this product is already favorited
+  const { data: favorites } = useFavorites(userId);
+
+  // Update isLiked when favorites data loads
+  useEffect(() => {
+    if (favorites?.favorites && product.product_id) {
+      const isFavorited = favorites.favorites.some(
+        (fav) => fav.product_id === product.product_id
+      );
+      setIsLiked(isFavorited);
+    }
+  }, [favorites, product.product_id]);
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click

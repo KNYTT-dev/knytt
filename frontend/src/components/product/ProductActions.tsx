@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, ShoppingCart, Check } from "lucide-react";
 import { useTrackInteraction } from "@/lib/queries/feedback";
+import { useFavorites } from "@/lib/queries/user";
 import { InteractionType } from "@/types/enums";
 
 interface ProductActionsProps {
@@ -19,6 +20,19 @@ export function ProductActions({
   const [isLiked, setIsLiked] = useState(false);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const feedbackMutation = useTrackInteraction();
+  
+  // Fetch user's favorites to check if this product is already favorited
+  const { data: favorites } = useFavorites(userId);
+
+  // Update isLiked when favorites data loads
+  useEffect(() => {
+    if (favorites?.favorites && productId) {
+      const isFavorited = favorites.favorites.some(
+        (fav) => fav.product_id === productId
+      );
+      setIsLiked(isFavorited);
+    }
+  }, [favorites, productId]);
 
   const handleLike = () => {
     if (!userId) return; // Skip if not authenticated
