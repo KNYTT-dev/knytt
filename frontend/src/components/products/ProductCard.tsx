@@ -12,7 +12,7 @@ import Tooltip from "@/components/ui/Tooltip";
 
 interface ProductCardProps {
   product: ProductResult;
-  userId?: number;
+  userId?: string;
   onProductClick?: (productId: string) => void;
 }
 

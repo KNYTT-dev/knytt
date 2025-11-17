@@ -14,7 +14,7 @@ export default function SearchContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const { user } = useAuth();
-  const userId = user?.id ? Number(user.id) : undefined;
+  const userId = user?.id;
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0,
   });

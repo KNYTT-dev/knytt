@@ -107,7 +107,7 @@ function CarouselCard({ product, userId, context, onLike, onAddToCart, onClick }
 interface RecommendationCarouselProps {
   title: string;
   products: ProductResult[];
-  userId?: number;
+  userId?: string;
   context?: string;
   isLoading?: boolean;
 }
