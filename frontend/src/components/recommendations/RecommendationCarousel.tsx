@@ -10,7 +10,7 @@ import Link from "next/link";
 
 interface CarouselCardProps {
   product: ProductResult;
-  userId?: number;
+  userId?: string; // UUID string
   context: string;
   onLike: (productId: string, e: React.MouseEvent) => void;
   onAddToCart: (productId: string, e: React.MouseEvent) => void;
@@ -160,7 +160,7 @@ export function RecommendationCarousel({
     e.stopPropagation();
     if (!userId) return;
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.LIKE,
       context,
@@ -172,7 +172,7 @@ export function RecommendationCarousel({
     e.stopPropagation();
     if (!userId) return;
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.ADD_TO_CART,
       context,
@@ -182,7 +182,7 @@ export function RecommendationCarousel({
   const handleClick = (productId: string) => {
     if (!userId) return;
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.CLICK,
       context,

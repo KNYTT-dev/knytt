@@ -10,7 +10,7 @@ import Link from "next/link";
 
 interface MasonryCardProps {
   product: ProductResult;
-  userId?: number;
+  userId?: string; // UUID string
   onLike: (productId: string, e: React.MouseEvent) => void;
   onAddToCart: (productId: string, e: React.MouseEvent) => void;
   onClick: (productId: string) => void;
@@ -138,7 +138,7 @@ export function MasonryGrid({ products, userId }: MasonryGridProps) {
     e.stopPropagation();
     if (!userId) return; // Skip if not authenticated
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.LIKE,
     });
@@ -149,7 +149,7 @@ export function MasonryGrid({ products, userId }: MasonryGridProps) {
     e.stopPropagation();
     if (!userId) return; // Skip if not authenticated
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.ADD_TO_CART,
     });
@@ -158,7 +158,7 @@ export function MasonryGrid({ products, userId }: MasonryGridProps) {
   const handleClick = (productId: string) => {
     if (!userId) return; // Skip if not authenticated
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.CLICK,
     });
