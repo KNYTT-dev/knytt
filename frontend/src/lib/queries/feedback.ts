@@ -37,10 +37,14 @@ export function useTrackInteraction() {
     },
     onSuccess: (data) => {
       // Invalidate relevant queries
+      // Invalidate feed after a delay to allow Celery task to complete
       if (data.embeddings_updated) {
-        queryClient.invalidateQueries({
-          queryKey: ["recommendations", "feed", data.user_id],
-        });
+        // Wait 3 seconds for embedding update to complete, then invalidate
+        setTimeout(() => {
+          queryClient.invalidateQueries({
+            queryKey: ["recommendations", "feed", data.user_id],
+          });
+        }, 3000);
       }
 
       // Invalidate favorites if it's a like/unlike interaction

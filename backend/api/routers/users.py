@@ -3,6 +3,7 @@ User-specific routes.
 Handles user favorites, history, statistics, and preferences.
 """
 
+import logging
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
@@ -10,6 +11,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from ...db.models import Product, User, UserInteraction
 from ..dependencies import get_current_user, get_db
@@ -73,7 +76,7 @@ async def remove_favorite(
     """
     Remove a product from favorites (unlike).
     """
-    from ...db.models import UserFavorite
+    from ...db.models import UserFavorite, UserInteraction
 
     # Convert string product_id to UUID
     try:
@@ -91,10 +94,32 @@ async def remove_favorite(
         .delete()
     )
 
-    db.commit()
-
     if deleted_count == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Favorite not found")
+
+    # Track the "unlike" interaction
+    interaction = UserInteraction(
+        user_id=current_user.id,
+        product_id=product_uuid,
+        interaction_type="unlike",
+        context="favorites_page",
+        metadata={"source": "remove_favorite"},
+    )
+    db.add(interaction)
+    db.commit()
+
+    # Trigger user embedding update (async via Celery)
+    try:
+        from ...tasks.embeddings import update_user_embedding
+        
+        update_user_embedding.delay(
+            user_id=str(current_user.id),
+            max_interactions=50
+        )
+        logger.debug(f"Dispatched embedding update for user {current_user.id} after unlike")
+    except Exception as e:
+        # Don't fail the request if Celery is unavailable
+        logger.warning(f"Failed to dispatch embedding update: {e}")
 
     return None
 
