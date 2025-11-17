@@ -112,6 +112,8 @@ class User(Base):
         "UserInteraction", back_populates="user", cascade="all, delete-orphan"
     )
     favorites = relationship("UserFavorite", back_populates="user", cascade="all, delete-orphan")
+    boards = relationship("Board", back_populates="user", cascade="all, delete-orphan")
+    board_items = relationship("BoardItem", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, external_id={self.external_id})>"
@@ -290,6 +292,116 @@ class UserFavorite(Base):
         return f"<UserFavorite(user_id={self.user_id}, product_id={self.product_id})>"
 
 
+class Board(Base):
+    """
+    Board model.
+
+    Stores user-created collections/boards for organizing products (Pinterest-style).
+    Users can have multiple boards to organize products by theme, occasion, style, etc.
+    """
+
+    __tablename__ = "boards"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
+    user_id = Column(
+        PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+
+    # Board metadata
+    name = Column(String(255), nullable=False, comment="Board name")
+    description = Column(Text, nullable=True, comment="Optional board description")
+    cover_image_url = Column(Text, nullable=True, comment="Board cover image URL")
+
+    # Settings
+    is_public = Column(
+        Boolean, nullable=False, server_default="false", comment="Whether board is publicly visible"
+    )
+    is_default = Column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        comment="Whether this is the user's default board (e.g., Favorites)",
+    )
+
+    # Ordering
+    position = Column(Integer, nullable=False, server_default="0", comment="Display order position")
+
+    # Timestamps
+    created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
+    updated_at = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    user = relationship("User", back_populates="boards")
+    items = relationship("BoardItem", back_populates="board", cascade="all, delete-orphan")
+
+    # Constraints and indexes
+    __table_args__ = (
+        Index("idx_boards_user_id", "user_id"),
+        Index("idx_boards_is_public", "is_public", postgresql_where=text("is_public = true")),
+        Index("idx_boards_user_position", "user_id", "position"),
+        Index("idx_boards_user_name", "user_id", "name", unique=True),
+    )
+
+    def __repr__(self):
+        return f"<Board(id={self.id}, user_id={self.user_id}, name={self.name})>"
+
+
+class BoardItem(Base):
+    """
+    Board Item model.
+
+    Stores products saved to boards (many-to-many relationship).
+    Same product can be saved to multiple boards.
+    """
+
+    __tablename__ = "board_items"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
+    board_id = Column(
+        PGUUID(as_uuid=True), ForeignKey("boards.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    product_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        comment="Denormalized user_id for easy querying",
+    )
+
+    # Item metadata
+    note = Column(Text, nullable=True, comment="Optional note about why this item was saved")
+    position = Column(
+        Integer, nullable=False, server_default="0", comment="Display order within board"
+    )
+
+    # Timestamp
+    created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
+
+    # Relationships
+    board = relationship("Board", back_populates="items")
+    product = relationship("Product", back_populates="board_items")
+    user = relationship("User", back_populates="board_items")
+
+    # Constraints and indexes
+    __table_args__ = (
+        Index("idx_board_items_board_id", "board_id"),
+        Index("idx_board_items_user_id", "user_id"),
+        Index("idx_board_items_product_id", "product_id"),
+        Index("idx_board_items_board_position", "board_id", "position"),
+        Index("idx_board_items_created", "created_at"),
+        Index("idx_board_items_board_product", "board_id", "product_id", unique=True),
+    )
+
+    def __repr__(self):
+        return f"<BoardItem(id={self.id}, board_id={self.board_id}, product_id={self.product_id})>"
+
+
 class Product(Base):
     """
     Product model.
@@ -393,6 +505,7 @@ class Product(Base):
         "ProductEmbedding", back_populates="product", cascade="all, delete-orphan"
     )
     favorited_by = relationship("UserFavorite", back_populates="product", cascade="all, delete-orphan")
+    board_items = relationship("BoardItem", back_populates="product", cascade="all, delete-orphan")
 
     # Unique constraint
     __table_args__ = (
