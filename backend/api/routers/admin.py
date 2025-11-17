@@ -200,13 +200,13 @@ async def refresh_user_embeddings(
             from ...db.models import User
             from ...tasks.embeddings import update_user_embedding
 
-            # Get external IDs for the user IDs
-            user_ids_int = request.user_ids
-            query = select(User.external_id).where(User.id.in_(user_ids_int))
+            # Verify users exist
+            user_ids_list = request.user_ids
+            query = select(User.id).where(User.id.in_(user_ids_list))
             results = db.execute(query).scalars().all()
-            external_ids = [str(ext_id) for ext_id in results]
+            existing_user_ids = [str(user_id) for user_id in results]
 
-            if not external_ids:
+            if not existing_user_ids:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="No users found with specified IDs",
@@ -214,17 +214,17 @@ async def refresh_user_embeddings(
 
             # Dispatch individual tasks
             task_ids = []
-            for ext_id in external_ids:
-                result = update_user_embedding.delay(user_external_id=ext_id)
+            for user_id in existing_user_ids:
+                result = update_user_embedding.delay(user_id=user_id)
                 task_ids.append(result.id)
 
-            logger.info(f"User embedding refresh triggered for {len(external_ids)} users")
+            logger.info(f"User embedding refresh triggered for {len(existing_user_ids)} users")
 
             return RefreshUserEmbeddingsResponse(
                 task_id=task_ids[0] if task_ids else "none",
                 status="queued",
-                message=f"Refresh queued for {len(external_ids)} users",
-                user_count=len(external_ids),
+                message=f"Refresh queued for {len(existing_user_ids)} users",
+                user_count=len(existing_user_ids),
             )
 
         else:

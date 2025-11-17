@@ -387,7 +387,7 @@ def rebuild_faiss_index(self, embedding_type: str = "text") -> Dict[str, Any]:
 
 @app.task(bind=True, name="tasks.update_user_embedding", max_retries=3, default_retry_delay=60)
 def update_user_embedding(
-    self, user_external_id: str, max_interactions: int = 50
+    self, user_id: str, max_interactions: int = 50
 ) -> Dict[str, Any]:
     """
     Update user's long-term embedding based on interaction history.
@@ -399,7 +399,7 @@ def update_user_embedding(
     4. Saves updated embedding to database and cache
 
     Args:
-        user_external_id: User external ID (from API)
+        user_id: User ID (UUID string)
         max_interactions: Maximum number of recent interactions to consider
 
     Returns:
@@ -410,7 +410,7 @@ def update_user_embedding(
     from sqlalchemy import select
 
     try:
-        logger.info(f"Updating long-term embedding for user {user_external_id}")
+        logger.info(f"Updating long-term embedding for user {user_id}")
 
         # Import here to avoid circular dependencies and early loading
         from ..db.models import User
@@ -426,17 +426,21 @@ def update_user_embedding(
             # Initialize cache (optional, gracefully handles Redis unavailability)
             try:
                 cache = EmbeddingCache()
+                logger.info("Embedding cache initialized")
             except Exception as e:
                 logger.warning(f"Cache unavailable, continuing without cache: {e}")
 
-            # Get user UUID from external_id
+            # Convert string UUID to UUID object
+            user_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
+
+            # Get user by ID
             user = db.execute(
-                select(User).where(User.external_id == user_external_id)
+                select(User).where(User.id == user_uuid)
             ).scalar_one_or_none()
 
             if user is None:
-                logger.error(f"User not found: {user_external_id}")
-                return {"status": "error", "user_id": user_external_id, "error": "User not found"}
+                logger.error(f"User not found: {user_id}")
+                return {"status": "error", "user_id": user_id, "error": "User not found"}
 
             # Create embedding builder
             builder = get_embedding_builder(db=db, cache=cache)
@@ -448,14 +452,40 @@ def update_user_embedding(
 
             if success:
                 logger.info(
-                    f"Updated user embedding for {user_external_id}: "
+                    f"Updated user embedding for {user_id}: "
                     f"status={metadata.get('status')}, "
                     f"confidence={metadata.get('confidence', 0):.2f}, "
                     f"processed={metadata.get('processed_count', 0)}/{metadata.get('interaction_count', 0)}"
                 )
+                
+                # Invalidate recommendation cache for this user
+                # Note: Cache keys are hashed, so we need to check each one
+                try:
+                    if cache:
+                        # Get all recommendation cache keys
+                        all_keys = cache.redis_client.keys("recommend:*")
+                        deleted = 0
+                        
+                        for key in all_keys:
+                            # Check if this key belongs to this user
+                            # Keys contain "user:{user_id}" in the string before hashing
+                            # For now, we'll just delete all recommend keys (simple but effective)
+                            # TODO: Add user_id to cache key prefix for efficient invalidation
+                            key_str = key.decode('utf-8') if isinstance(key, bytes) else key
+                            if key_str.startswith("recommend:"):
+                                try:
+                                    cache.redis_client.delete(key)
+                                    deleted += 1
+                                except:
+                                    pass
+                        
+                        logger.info(f"Invalidated {deleted} recommendation cache entries after embedding update for user {user_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to invalidate cache for user {user_id}: {e}")
+                
                 return {
                     "status": "success",
-                    "user_id": user_external_id,
+                    "user_id": user_id,
                     "metadata": metadata,
                 }
             else:
@@ -463,7 +493,7 @@ def update_user_embedding(
                 logger.error(f"Failed to update user embedding: {error_msg}")
                 return {
                     "status": "error",
-                    "user_id": user_external_id,
+                    "user_id": user_id,
                     "error": error_msg,
                 }
 
@@ -471,16 +501,16 @@ def update_user_embedding(
             db.close()
 
     except Exception as e:
-        logger.error(f"Error updating user embedding for {user_external_id}: {e}", exc_info=True)
+        logger.error(f"Error updating user embedding for {user_id}: {e}", exc_info=True)
 
         # Retry on failure
         try:
             self.retry(exc=e)
         except self.MaxRetriesExceededError:
-            logger.error(f"Max retries exceeded for user {user_external_id}")
+            logger.error(f"Max retries exceeded for user {user_id}")
             return {
                 "status": "error",
-                "user_id": user_external_id,
+                "user_id": user_id,
                 "error": str(e),
                 "retries_exceeded": True,
             }
@@ -525,16 +555,16 @@ def batch_refresh_user_embeddings(
 
             # Query for active users
             query = (
-                select(User.external_id, func.count(UserInteraction.id).label("interaction_count"))
+                select(User.id, func.count(UserInteraction.id).label("interaction_count"))
                 .join(UserInteraction, User.id == UserInteraction.user_id)
                 .where(UserInteraction.created_at >= cutoff_time)
-                .group_by(User.external_id)
+                .group_by(User.id)
                 .order_by(func.count(UserInteraction.id).desc())
                 .limit(batch_size)
             )
 
             results = db.execute(query).all()
-            active_users = [(row[0], row[1]) for row in results]
+            active_users = [(str(row[0]), row[1]) for row in results]
 
             logger.info(f"Found {len(active_users)} active users")
 
@@ -550,24 +580,24 @@ def batch_refresh_user_embeddings(
             failed = 0
             task_ids = []
 
-            for user_external_id, interaction_count in active_users:
+            for user_id, interaction_count in active_users:
                 try:
                     # Dispatch update task
                     result = update_user_embedding.delay(
-                        user_external_id=user_external_id,
+                        user_id=user_id,
                         max_interactions=100,  # Use more interactions for periodic refresh
                     )
                     task_ids.append(result.id)
                     successful += 1
 
                     logger.debug(
-                        f"Dispatched refresh for user {user_external_id} "
+                        f"Dispatched refresh for user {user_id} "
                         f"({interaction_count} interactions, task {result.id})"
                     )
 
                 except Exception as e:
                     failed += 1
-                    logger.error(f"Failed to dispatch refresh for user {user_external_id}: {e}")
+                    logger.error(f"Failed to dispatch refresh for user {user_id}: {e}")
 
             logger.info(
                 f"Batch user embedding refresh complete: {successful}/{len(active_users)} dispatched"

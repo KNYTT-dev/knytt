@@ -93,7 +93,7 @@ async def record_feedback(
             from ...tasks.embeddings import update_user_embedding
 
             result = update_user_embedding.delay(
-                user_external_id=str(request.user_id), max_interactions=50
+                user_id=str(request.user_id), max_interactions=50
             )
             task_id = result.id
             embeddings_updated = True  # Marked as queued

@@ -379,9 +379,8 @@ class UserEmbeddingBuilder:
             # Get current long-term embedding if it exists
             from ...db.models import UserEmbedding
 
-            query = select(UserEmbedding).where(
-                and_(UserEmbedding.user_id == user_id, UserEmbedding.embedding_type == "long_term")
-            )
+            # Query by user_id only (one record per user)
+            query = select(UserEmbedding).where(UserEmbedding.user_id == user_id)
             existing = self.db.execute(query).scalar_one_or_none()
 
             current_embedding = None

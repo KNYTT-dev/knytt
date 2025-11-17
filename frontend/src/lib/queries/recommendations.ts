@@ -41,7 +41,7 @@ export function useFeed(
       return response.json();
     },
     enabled: !!userId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 15, // 15 seconds - allows embedding updates to reflect quickly
     retry: (failureCount, error) => {
       // Don't retry on 404 (user hasn't completed onboarding)
       if (error.message?.includes("no preference profile") || error.message?.includes("404")) {
