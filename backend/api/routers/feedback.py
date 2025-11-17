@@ -88,6 +88,7 @@ async def record_feedback(
     embeddings_updated = False
     task_id = None
     if request.update_embeddings:
+        logger.info(f"Attempting to dispatch Celery task for user {request.user_id} (interaction: {request.interaction_type.value})")
         try:
             # Dispatch Celery task for async processing
             from ...tasks.embeddings import update_user_embedding
@@ -98,7 +99,7 @@ async def record_feedback(
             task_id = result.id
             embeddings_updated = True  # Marked as queued
 
-            logger.debug(f"Dispatched embedding update task {task_id} for user {request.user_id}")
+            logger.info(f"✓ Dispatched Celery task {task_id} to update embeddings for user {request.user_id}")
         except Exception as e:
             # Redis/Celery not available (e.g., in Cloud Run without Redis)
             # Continue without background embedding update
