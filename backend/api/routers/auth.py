@@ -227,10 +227,20 @@ async def login(
 async def logout(response: Response) -> dict:
     """
     Logout by clearing auth cookies.
+    
+    CRITICAL: Must use the same cookie attributes (including Partitioned) 
+    as when the cookies were set, otherwise browsers won't delete them.
     """
     cookie_settings = get_cookie_settings()
-    response.delete_cookie("access_token", **cookie_settings)
-    response.delete_cookie("refresh_token", **cookie_settings)
+    
+    # Delete cookies by setting Max-Age=0 with ALL the same attributes
+    # (including Partitioned) that were used when setting them
+    access_cookie = build_cookie_header("access_token", "", 0, cookie_settings)
+    response.headers.append("Set-Cookie", access_cookie)
+    
+    refresh_cookie = build_cookie_header("refresh_token", "", 0, cookie_settings)
+    response.headers.append("Set-Cookie", refresh_cookie)
+    
     return {"message": "Successfully logged out"}
 
 
