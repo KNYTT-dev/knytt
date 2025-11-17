@@ -7,9 +7,36 @@ import os
 from celery import Celery
 from celery.schedules import crontab
 
+
+def _build_redis_url() -> str:
+    """
+    Build Redis URL from environment variables.
+
+    Supports two configuration styles:
+    1. REDIS_URL (full URL) - used in local development
+    2. REDIS_HOST, REDIS_PORT, REDIS_PASSWORD - used in Cloud Run
+
+    Returns:
+        Redis URL string
+    """
+    # Option 1: Use REDIS_URL if explicitly set
+    if redis_url := os.getenv("REDIS_URL"):
+        return redis_url
+
+    # Option 2: Construct from REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
+    redis_host = os.getenv("REDIS_HOST", "localhost")
+    redis_port = os.getenv("REDIS_PORT", "6379")
+    redis_password = os.getenv("REDIS_PASSWORD")
+    redis_db = os.getenv("REDIS_DB", "0")
+
+    if redis_password:
+        return f"redis://:{redis_password}@{redis_host}:{redis_port}/{redis_db}"
+    else:
+        return f"redis://{redis_host}:{redis_port}/{redis_db}"
+
+
 # Get configuration from environment
-# Use REDIS_URL if set, otherwise construct from CELERY_BROKER_URL or default
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+REDIS_URL = _build_redis_url()
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL)
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", REDIS_URL)
 
@@ -36,6 +63,27 @@ app.conf.update(
     task_soft_time_limit=25 * 60,  # 25 minutes
     worker_prefetch_multiplier=1,
     worker_max_tasks_per_child=1000,
+    # Redis backend connection retry settings - fail faster
+    redis_retry_on_timeout=True,
+    redis_socket_timeout=2,  # 2 second timeout for socket operations
+    redis_socket_connect_timeout=2,  # 2 second timeout for connection
+    redis_max_connections=10,
+    # Reduce backend retry attempts from default 20 to 3
+    result_backend_transport_options={
+        "master_name": None,
+        "socket_timeout": 2,
+        "socket_connect_timeout": 2,
+        "retry_on_timeout": True,
+        "max_connections": 10,
+        "retry_max_attempts": 3,  # Reduce from default 20 to 3
+    },
+    broker_transport_options={
+        "socket_timeout": 2,
+        "socket_connect_timeout": 2,
+        "retry_on_timeout": True,
+        "max_connections": 10,
+        "retry_max_attempts": 3,  # Reduce from default 20 to 3
+    },
 )
 
 # Configure periodic tasks with Celery Beat
