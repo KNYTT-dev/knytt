@@ -467,7 +467,7 @@ resource "google_cloud_run_v2_service" "worker" {
     }
 
     scaling {
-      min_instance_count = 0
+      min_instance_count = 1  # Keep at least 1 worker running to process Celery tasks from Redis
       max_instance_count = var.environment == "prod" ? 5 : 2
     }
 
