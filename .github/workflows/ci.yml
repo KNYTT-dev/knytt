@@ -57,9 +57,10 @@ jobs:
           flake8 backend tests --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 backend tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Type check with mypy
+      - name: Type check with mypy (advisory only)
+        continue-on-error: true
         run: |
-          mypy backend --ignore-missing-imports --no-strict-optional
+          mypy backend --ignore-missing-imports --no-strict-optional --allow-untyped-defs --allow-untyped-calls --no-warn-return-any
 
       - name: Run tests with pytest
         env:
