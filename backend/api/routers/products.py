@@ -43,7 +43,9 @@ async def get_product(
     Raises:
         APIError: If product not found or invalid UUID
     """
-    logger.info(f"Product details request: product_id={product_id}", extra={"request_id": request_id})
+    logger.info(
+        f"Product details request: product_id={product_id}", extra={"request_id": request_id}
+    )
 
     # Validate UUID format
     try:
@@ -57,9 +59,7 @@ async def get_product(
 
     # Fetch product from database
     try:
-        product = db.execute(
-            select(Product).where(Product.id == product_uuid)
-        ).scalar_one_or_none()
+        product = db.execute(select(Product).where(Product.id == product_uuid)).scalar_one_or_none()
 
         if not product:
             raise APIError(
@@ -74,7 +74,9 @@ async def get_product(
         product_id_str = str(product.id)
         enriched_results = metadata_service.enrich_results(
             product_ids=[product_id_str],
-            scores={product_id_str: {"similarity": 1.0, "rank": 1}},  # Default scores for single product
+            scores={
+                product_id_str: {"similarity": 1.0, "rank": 1}
+            },  # Default scores for single product
             db=db,
         )
 

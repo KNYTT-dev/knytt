@@ -65,14 +65,14 @@ def build_cookie_header(key: str, value: str, max_age: int, settings: dict) -> s
     parts = [f"{key}={value}"]
     parts.append(f"Max-Age={max_age}")
     parts.append(f"Path={settings['path']}")
-    if settings.get('httponly'):
+    if settings.get("httponly"):
         parts.append("HttpOnly")
-    if settings.get('secure'):
+    if settings.get("secure"):
         parts.append("Secure")
-    if settings.get('samesite'):
+    if settings.get("samesite"):
         parts.append(f"SameSite={settings['samesite'].capitalize()}")
     # Add Partitioned attribute for Chrome's third-party cookie support
-    if settings.get('secure') and settings.get('samesite') == 'none':
+    if settings.get("secure") and settings.get("samesite") == "none":
         parts.append("Partitioned")
     return "; ".join(parts)
 
@@ -126,11 +126,15 @@ async def register(
     cookie_settings = get_cookie_settings()
 
     # Set access_token cookie
-    access_cookie = build_cookie_header("access_token", access_token, ACCESS_TOKEN_EXPIRE_MINUTES * 60, cookie_settings)
+    access_cookie = build_cookie_header(
+        "access_token", access_token, ACCESS_TOKEN_EXPIRE_MINUTES * 60, cookie_settings
+    )
     response.headers.append("Set-Cookie", access_cookie)
 
     # Set refresh_token cookie
-    refresh_cookie = build_cookie_header("refresh_token", refresh_token, 7 * 24 * 60 * 60, cookie_settings)
+    refresh_cookie = build_cookie_header(
+        "refresh_token", refresh_token, 7 * 24 * 60 * 60, cookie_settings
+    )
     response.headers.append("Set-Cookie", refresh_cookie)
 
     # Update last login
@@ -201,16 +205,21 @@ async def login(
 
     # Debug logging for cookie troubleshooting
     import logging
+
     logger = logging.getLogger(__name__)
     logger.info(f"POST /auth/login - Setting cookies with settings: {cookie_settings}")
 
     # Set access_token cookie with Partitioned attribute
-    access_cookie = build_cookie_header("access_token", access_token, ACCESS_TOKEN_EXPIRE_MINUTES * 60, cookie_settings)
+    access_cookie = build_cookie_header(
+        "access_token", access_token, ACCESS_TOKEN_EXPIRE_MINUTES * 60, cookie_settings
+    )
     response.headers.append("Set-Cookie", access_cookie)
     logger.info(f"POST /auth/login - Set-Cookie header for access_token: {access_cookie}")
 
     # Set refresh_token cookie with Partitioned attribute
-    refresh_cookie = build_cookie_header("refresh_token", refresh_token, 7 * 24 * 60 * 60, cookie_settings)
+    refresh_cookie = build_cookie_header(
+        "refresh_token", refresh_token, 7 * 24 * 60 * 60, cookie_settings
+    )
     response.headers.append("Set-Cookie", refresh_cookie)
     logger.info(f"POST /auth/login - Set-Cookie header for refresh_token: {refresh_cookie}")
 
@@ -227,20 +236,20 @@ async def login(
 async def logout(response: Response) -> dict:
     """
     Logout by clearing auth cookies.
-    
-    CRITICAL: Must use the same cookie attributes (including Partitioned) 
+
+    CRITICAL: Must use the same cookie attributes (including Partitioned)
     as when the cookies were set, otherwise browsers won't delete them.
     """
     cookie_settings = get_cookie_settings()
-    
+
     # Delete cookies by setting Max-Age=0 with ALL the same attributes
     # (including Partitioned) that were used when setting them
     access_cookie = build_cookie_header("access_token", "", 0, cookie_settings)
     response.headers.append("Set-Cookie", access_cookie)
-    
+
     refresh_cookie = build_cookie_header("refresh_token", "", 0, cookie_settings)
     response.headers.append("Set-Cookie", refresh_cookie)
-    
+
     return {"message": "Successfully logged out"}
 
 
@@ -261,6 +270,7 @@ async def get_current_user(
     Requires valid access token in cookie.
     """
     import logging
+
     logger = logging.getLogger(__name__)
 
     # Debug logging for cookie troubleshooting
@@ -383,7 +393,9 @@ async def refresh_access_token(
     cookie_settings = get_cookie_settings()
 
     # Set access_token cookie
-    access_cookie = build_cookie_header("access_token", new_access_token, ACCESS_TOKEN_EXPIRE_MINUTES * 60, cookie_settings)
+    access_cookie = build_cookie_header(
+        "access_token", new_access_token, ACCESS_TOKEN_EXPIRE_MINUTES * 60, cookie_settings
+    )
     response.headers.append("Set-Cookie", access_cookie)
 
     return TokenResponse(

@@ -321,7 +321,9 @@ class UserEmbeddingBuilder:
                         embedding.tolist() if embedding_type == "long_term" else None
                     ),
                     session_embedding=embedding.tolist() if embedding_type == "session" else None,
-                    long_term_updated_at=datetime.utcnow() if embedding_type == "long_term" else None,
+                    long_term_updated_at=(
+                        datetime.utcnow() if embedding_type == "long_term" else None
+                    ),
                     session_updated_at=datetime.utcnow() if embedding_type == "session" else None,
                     session_started_at=datetime.utcnow() if embedding_type == "session" else None,
                     last_active_at=datetime.utcnow(),

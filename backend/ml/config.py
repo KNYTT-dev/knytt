@@ -6,6 +6,7 @@ Centralized configuration for embedding generation, model loading, and user mode
 # CRITICAL: Set PyTorch environment variables BEFORE importing torch
 # This fixes CLIP model loading hang on Apple Silicon (macOS)
 import os
+
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "0"
 os.environ["ML_DEVICE"] = "cpu"
 

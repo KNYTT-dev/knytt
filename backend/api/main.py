@@ -7,6 +7,7 @@ Entry point for the GreenThumb ML API.
 # This fixes CLIP model loading hang on Apple Silicon (macOS)
 # These variables must be set before torch is imported anywhere in the codebase
 import os
+
 os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "0")
 os.environ.setdefault("ML_DEVICE", "cpu")
 

@@ -195,7 +195,7 @@ async def recommend(
         if not request.search_query:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="search_query required for context=search"
+                detail="search_query required for context=search",
             )
 
         try:
@@ -220,7 +220,7 @@ async def recommend(
         if not request.product_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="product_id required for context=similar"
+                detail="product_id required for context=similar",
             )
 
         # Get product embedding from cache or database
@@ -229,7 +229,7 @@ async def recommend(
         if product_embedding is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Product not found or has no embedding: {request.product_id}"
+                detail=f"Product not found or has no embedding: {request.product_id}",
             )
 
         # Blend product with user profile
@@ -245,7 +245,7 @@ async def recommend(
         if not request.category_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="category_id required for context=category"
+                detail="category_id required for context=category",
             )
 
         query_vector = long_term_embedding if has_long_term_profile else session_embedding
@@ -468,7 +468,7 @@ def _get_product_embedding(
             product_embedding = db.execute(
                 select(ProductEmbedding).where(
                     ProductEmbedding.product_id == product_uuid,
-                    ProductEmbedding.embedding_type == "text"
+                    ProductEmbedding.embedding_type == "text",
                 )
             ).scalar_one_or_none()
 
@@ -486,7 +486,7 @@ def _get_product_embedding(
             else:
                 logger.warning(f"Product embedding has no vector data: {product_id}")
                 return None
-            
+
             if embedding is not None:
 
                 # Cache for future use
