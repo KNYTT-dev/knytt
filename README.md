@@ -50,6 +50,10 @@ source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
+pip install -r requirements-dev.txt  # For development tools
+
+# Set up pre-commit hooks (catches formatting issues before commit)
+pre-commit install
 
 # Copy environment file
 cp .env .env.local  # Edit if needed
@@ -322,9 +326,17 @@ See [docs/deployment/README.md](docs/deployment/README.md) for deployment guides
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Install development dependencies and pre-commit hooks:
+   ```bash
+   pip install -r requirements-dev.txt
+   pre-commit install
+   ```
+4. Make your changes (pre-commit hooks will auto-format on commit)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+**Note:** Pre-commit hooks will automatically run Black, isort, flake8, and other checks before each commit. This ensures code quality and prevents CI failures.
 
 ## 📄 License
 
