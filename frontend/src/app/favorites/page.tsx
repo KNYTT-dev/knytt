@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTrackInteraction } from "@/lib/queries/feedback";
 import { InteractionType } from "@/types/enums";
+import { useEffect } from "react";
 
 export default function FavoritesPage() {
   const router = useRouter();
@@ -17,6 +18,13 @@ export default function FavoritesPage() {
   );
   const removeFavorite = useRemoveFavorite();
   const feedbackMutation = useTrackInteraction();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login?redirect=/favorites");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   // Debug logging
   console.log("FavoritesPage:", {
@@ -29,9 +37,22 @@ export default function FavoritesPage() {
     favoritesError,
   });
 
-  // Redirect to login if not authenticated
-  if (!authLoading && !isAuthenticated) {
-    router.push("/login?redirect=/favorites");
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-ivory">
+        <div className="container mx-auto px-4 py-12">
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 text-sage animate-spin mb-4" />
+            <p className="text-sage">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if redirecting
+  if (!isAuthenticated) {
     return null;
   }
 
