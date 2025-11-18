@@ -36,7 +36,7 @@ class RebuildIndexResponse(BaseModel):
 
 
 class GenerateEmbeddingsRequest(BaseModel):
-    product_ids: Optional[List[str]] = Field(None, description="Specific product UUIDs to process")
+    product_ids: list[str] | None = Field(None, description="Specific product UUIDs to process")
     batch_size: int = Field(default=16, ge=1, le=100, description="Batch size")
     force_regenerate: bool = Field(default=False, description="Regenerate existing embeddings")
     embedding_type: str = Field(default="text", description="Type of embedding")
@@ -46,11 +46,11 @@ class GenerateEmbeddingsResponse(BaseModel):
     task_id: str = Field(..., description="Celery task ID")
     status: str = Field(default="queued", description="Task status")
     message: str = Field(..., description="Success message")
-    product_count: Optional[int] = Field(None, description="Number of products queued")
+    product_count: int | None = Field(None, description="Number of products queued")
 
 
 class RefreshUserEmbeddingsRequest(BaseModel):
-    user_ids: Optional[List[int]] = Field(None, description="Specific user IDs to refresh")
+    user_ids: list[int] | None = Field(None, description="Specific user IDs to refresh")
     hours_active: int = Field(default=24, ge=1, description="Refresh users active in last N hours")
     batch_size: int = Field(default=50, ge=1, le=1000, description="Max users to process")
 
@@ -59,7 +59,7 @@ class RefreshUserEmbeddingsResponse(BaseModel):
     task_id: str = Field(..., description="Celery task ID")
     status: str = Field(default="queued", description="Task status")
     message: str = Field(..., description="Success message")
-    user_count: Optional[int] = Field(None, description="Number of users queued")
+    user_count: int | None = Field(None, description="Number of users queued")
 
 
 class ClearCacheRequest(BaseModel):
@@ -67,20 +67,20 @@ class ClearCacheRequest(BaseModel):
         default="all",
         description="Type of cache to clear: 'all', 'embeddings', 'search', 'recommendations'",
     )
-    user_id: Optional[int] = Field(None, description="Clear cache for specific user")
+    user_id: int | None = Field(None, description="Clear cache for specific user")
 
 
 class ClearCacheResponse(BaseModel):
     status: str = Field(..., description="Status")
     message: str = Field(..., description="Result message")
-    keys_cleared: Optional[int] = Field(None, description="Number of keys cleared")
+    keys_cleared: int | None = Field(None, description="Number of keys cleared")
 
 
 class TaskStatusResponse(BaseModel):
     task_id: str = Field(..., description="Celery task ID")
     status: str = Field(..., description="Task status (PENDING, STARTED, SUCCESS, FAILURE)")
-    result: Optional[dict] = Field(None, description="Task result if completed")
-    error: Optional[str] = Field(None, description="Error message if failed")
+    result: dict | None = Field(None, description="Task result if completed")
+    error: str | None = Field(None, description="Error message if failed")
 
 
 # Endpoints
@@ -453,6 +453,7 @@ async def generate_product_embeddings_sync(
     """
     try:
         from sqlalchemy import text as sql_text
+
         from ...ml.model_loader import model_registry
 
         logger.info("Starting synchronous embedding generation")
@@ -753,9 +754,9 @@ async def rebuild_faiss_index_sync(
                 )
 
                 if gcs_uploaded:
-                    logger.info(f"Successfully uploaded FAISS index to GCS")
+                    logger.info("Successfully uploaded FAISS index to GCS")
                 else:
-                    logger.warning(f"Failed to upload FAISS index to GCS")
+                    logger.warning("Failed to upload FAISS index to GCS")
             except Exception as e:
                 logger.error(f"Error managing GCS index: {e}", exc_info=True)
         else:
@@ -773,7 +774,7 @@ async def rebuild_faiss_index_sync(
             "gcs_bucket": gcs_bucket if gcs_bucket else None,
             "stats": stats,
             "message": f"FAISS index rebuilt with {stats['num_vectors']} vectors"
-            + (f" and uploaded to GCS" if gcs_uploaded else ""),
+            + (" and uploaded to GCS" if gcs_uploaded else ""),
         }
 
     except Exception as e:

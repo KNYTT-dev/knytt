@@ -6,13 +6,12 @@ and uploading ML artifacts like FAISS indices.
 """
 
 import logging
-import os
 from pathlib import Path
 from typing import Optional
 
 try:
-    from google.cloud import storage
     from google.api_core import exceptions as gcp_exceptions
+    from google.cloud import storage
 
     GCS_AVAILABLE = True
 except ImportError:
@@ -29,7 +28,7 @@ class GCSError(Exception):
 
 
 def download_faiss_index_from_gcs(
-    bucket_name: str, gcs_path: str, local_path: Path, required_files: Optional[list] = None
+    bucket_name: str, gcs_path: str, local_path: Path, required_files: list | None = None
 ) -> bool:
     """
     Download FAISS index files from GCS to local directory.
@@ -114,7 +113,7 @@ def download_faiss_index_from_gcs(
 
 
 def upload_faiss_index_to_gcs(
-    local_path: Path, bucket_name: str, gcs_path: str, files_to_upload: Optional[list] = None
+    local_path: Path, bucket_name: str, gcs_path: str, files_to_upload: list | None = None
 ) -> bool:
     """
     Upload FAISS index files from local directory to GCS.
