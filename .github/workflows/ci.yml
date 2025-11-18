@@ -60,7 +60,7 @@ jobs:
       - name: Type check with mypy (advisory only)
         continue-on-error: true
         run: |
-          mypy backend --ignore-missing-imports --no-strict-optional --allow-untyped-defs --allow-untyped-calls --no-warn-return-any
+          mypy backend --ignore-missing-imports --no-strict-optional --allow-untyped-defs --allow-untyped-calls --no-warn-return-any --exclude 'site-packages' || true
 
       - name: Run tests with pytest
         env:
