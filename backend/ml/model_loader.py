@@ -7,6 +7,7 @@ Handles lazy loading, device management, and provides encoding APIs.
 # CRITICAL: Set PyTorch environment variables BEFORE any imports
 # This fixes CLIP model loading hang on Apple Silicon (macOS)
 import os
+
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "0"
 os.environ["ML_DEVICE"] = "cpu"
 

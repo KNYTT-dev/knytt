@@ -39,14 +39,14 @@ async def discover_products(
     """
     try:
         # Base query
-        query = db.query(
-            Product,
-            func.coalesce(func.count(UserInteraction.id), 0).label("interaction_count")
-        ).outerjoin(
-            UserInteraction, Product.id == UserInteraction.product_id
-        ).filter(
-            Product.is_active == True  # noqa: E712
-        ).group_by(Product.id)
+        query = (
+            db.query(
+                Product, func.coalesce(func.count(UserInteraction.id), 0).label("interaction_count")
+            )
+            .outerjoin(UserInteraction, Product.id == UserInteraction.product_id)
+            .filter(Product.is_active == True)  # noqa: E712
+            .group_by(Product.id)
+        )
 
         # Price filters
         if min_price is not None:
@@ -56,9 +56,9 @@ async def discover_products(
 
         # Only show products with images
         query = query.filter(
-            (Product.merchant_image_url != None) |  # noqa: E711
-            (Product.aw_image_url != None) |  # noqa: E711
-            (Product.large_image != None)  # noqa: E711
+            (Product.merchant_image_url != None)  # noqa: E711
+            | (Product.aw_image_url != None)  # noqa: E711
+            | (Product.large_image != None)  # noqa: E711
         )
 
         # Sorting
@@ -82,24 +82,26 @@ async def discover_products(
         for product, interaction_count in products_with_counts:
             image_url = product.merchant_image_url or product.aw_image_url or product.large_image
 
-            results.append(ProductResult(
-                product_id=str(product.id),
-                title=product.product_name or "",
-                description=product.description or "",
-                price=float(product.search_price) if product.search_price else 0.0,
-                currency=product.currency or "USD",
-                merchant_name=product.merchant_name or "",
-                merchant_id=product.merchant_id,  # Keep as int, schema expects Optional[int]
-                category_name=product.category_name or "",
-                category_id=product.category_id,  # Keep as int, schema expects Optional[int]
-                brand_name=product.brand_name or "",
-                image_url=image_url,
-                product_url=product.aw_deep_link or product.merchant_deep_link or "",
-                in_stock=product.in_stock if product.in_stock is not None else True,
-                score=0.0,  # No ML score for simple discover
-                similarity=0.0,  # Default similarity for non-ML results
-                rank=len(results),  # Sequential rank based on position
-            ))
+            results.append(
+                ProductResult(
+                    product_id=str(product.id),
+                    title=product.product_name or "",
+                    description=product.description or "",
+                    price=float(product.search_price) if product.search_price else 0.0,
+                    currency=product.currency or "USD",
+                    merchant_name=product.merchant_name or "",
+                    merchant_id=product.merchant_id,  # Keep as int, schema expects Optional[int]
+                    category_name=product.category_name or "",
+                    category_id=product.category_id,  # Keep as int, schema expects Optional[int]
+                    brand_name=product.brand_name or "",
+                    image_url=image_url,
+                    product_url=product.aw_deep_link or product.merchant_deep_link or "",
+                    in_stock=product.in_stock if product.in_stock is not None else True,
+                    score=0.0,  # No ML score for simple discover
+                    similarity=0.0,  # Default similarity for non-ML results
+                    rank=len(results),  # Sequential rank based on position
+                )
+            )
 
         return {
             "results": results,

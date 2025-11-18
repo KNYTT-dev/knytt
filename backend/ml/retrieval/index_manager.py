@@ -228,27 +228,29 @@ class FAISSIndexManager:
             return  # Already loaded
 
         # Try downloading from GCS if configured
-        gcs_bucket = os.getenv('GCS_FAISS_INDEX_BUCKET')
-        gcs_path = os.getenv('GCS_FAISS_INDEX_PATH')
+        gcs_bucket = os.getenv("GCS_FAISS_INDEX_BUCKET")
+        gcs_path = os.getenv("GCS_FAISS_INDEX_PATH")
 
         if gcs_bucket and gcs_path:
             try:
                 from ..utils.gcs_utils import download_faiss_index_from_gcs
 
-                logger.info(f"Attempting to download FAISS index from GCS: gs://{gcs_bucket}/{gcs_path}")
+                logger.info(
+                    f"Attempting to download FAISS index from GCS: gs://{gcs_bucket}/{gcs_path}"
+                )
 
                 # Download to the configured local path
                 local_path = self.config.storage.faiss_index_path
                 success = download_faiss_index_from_gcs(
-                    bucket_name=gcs_bucket,
-                    gcs_path=gcs_path,
-                    local_path=local_path
+                    bucket_name=gcs_bucket, gcs_path=gcs_path, local_path=local_path
                 )
 
                 if success:
                     logger.info("Successfully downloaded FAISS index from GCS")
                 else:
-                    logger.warning("Failed to download FAISS index from GCS, will try local disk or rebuild")
+                    logger.warning(
+                        "Failed to download FAISS index from GCS, will try local disk or rebuild"
+                    )
             except ImportError:
                 logger.warning("GCS utilities not available, skipping GCS download")
             except Exception as e:

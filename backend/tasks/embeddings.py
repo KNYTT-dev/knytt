@@ -386,9 +386,7 @@ def rebuild_faiss_index(self, embedding_type: str = "text") -> Dict[str, Any]:
 
 
 @app.task(bind=True, name="tasks.update_user_embedding", max_retries=3, default_retry_delay=60)
-def update_user_embedding(
-    self, user_id: str, max_interactions: int = 50
-) -> Dict[str, Any]:
+def update_user_embedding(self, user_id: str, max_interactions: int = 50) -> Dict[str, Any]:
     """
     Update user's long-term embedding based on interaction history.
 
@@ -434,9 +432,7 @@ def update_user_embedding(
             user_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
 
             # Get user by ID
-            user = db.execute(
-                select(User).where(User.id == user_uuid)
-            ).scalar_one_or_none()
+            user = db.execute(select(User).where(User.id == user_uuid)).scalar_one_or_none()
 
             if user is None:
                 logger.error(f"User not found: {user_id}")
@@ -457,7 +453,7 @@ def update_user_embedding(
                     f"confidence={metadata.get('confidence', 0):.2f}, "
                     f"processed={metadata.get('processed_count', 0)}/{metadata.get('interaction_count', 0)}"
                 )
-                
+
                 # Invalidate recommendation cache for this user
                 # Note: Cache keys are hashed, so we need to check each one
                 try:
@@ -467,24 +463,26 @@ def update_user_embedding(
                         redis_client = cache.redis._get_client()
                         all_keys = redis_client.keys("recommend:*")
                         deleted = 0
-                        
+
                         for key in all_keys:
                             # Check if this key belongs to this user
                             # Keys contain "user:{user_id}" in the string before hashing
                             # For now, we'll just delete all recommend keys (simple but effective)
                             # TODO: Add user_id to cache key prefix for efficient invalidation
-                            key_str = key.decode('utf-8') if isinstance(key, bytes) else key
+                            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
                             if key_str.startswith("recommend:"):
                                 try:
                                     redis_client.delete(key)
                                     deleted += 1
                                 except:
                                     pass
-                        
-                        logger.info(f"✓ Invalidated {deleted} recommendation cache entries after embedding update for user {user_id}")
+
+                        logger.info(
+                            f"✓ Invalidated {deleted} recommendation cache entries after embedding update for user {user_id}"
+                        )
                 except Exception as e:
                     logger.warning(f"Failed to invalidate cache for user {user_id}: {e}")
-                
+
                 return {
                     "status": "success",
                     "user_id": user_id,

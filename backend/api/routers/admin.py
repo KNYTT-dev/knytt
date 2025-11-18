@@ -36,7 +36,7 @@ class RebuildIndexResponse(BaseModel):
 
 
 class GenerateEmbeddingsRequest(BaseModel):
-    product_ids: Optional[List[str]] = Field(None, description="Specific product UUIDs to process")
+    product_ids: list[str] | None = Field(None, description="Specific product UUIDs to process")
     batch_size: int = Field(default=16, ge=1, le=100, description="Batch size")
     force_regenerate: bool = Field(default=False, description="Regenerate existing embeddings")
     embedding_type: str = Field(default="text", description="Type of embedding")
@@ -46,11 +46,11 @@ class GenerateEmbeddingsResponse(BaseModel):
     task_id: str = Field(..., description="Celery task ID")
     status: str = Field(default="queued", description="Task status")
     message: str = Field(..., description="Success message")
-    product_count: Optional[int] = Field(None, description="Number of products queued")
+    product_count: int | None = Field(None, description="Number of products queued")
 
 
 class RefreshUserEmbeddingsRequest(BaseModel):
-    user_ids: Optional[List[int]] = Field(None, description="Specific user IDs to refresh")
+    user_ids: list[int] | None = Field(None, description="Specific user IDs to refresh")
     hours_active: int = Field(default=24, ge=1, description="Refresh users active in last N hours")
     batch_size: int = Field(default=50, ge=1, le=1000, description="Max users to process")
 
@@ -59,7 +59,7 @@ class RefreshUserEmbeddingsResponse(BaseModel):
     task_id: str = Field(..., description="Celery task ID")
     status: str = Field(default="queued", description="Task status")
     message: str = Field(..., description="Success message")
-    user_count: Optional[int] = Field(None, description="Number of users queued")
+    user_count: int | None = Field(None, description="Number of users queued")
 
 
 class ClearCacheRequest(BaseModel):
@@ -67,20 +67,20 @@ class ClearCacheRequest(BaseModel):
         default="all",
         description="Type of cache to clear: 'all', 'embeddings', 'search', 'recommendations'",
     )
-    user_id: Optional[int] = Field(None, description="Clear cache for specific user")
+    user_id: int | None = Field(None, description="Clear cache for specific user")
 
 
 class ClearCacheResponse(BaseModel):
     status: str = Field(..., description="Status")
     message: str = Field(..., description="Result message")
-    keys_cleared: Optional[int] = Field(None, description="Number of keys cleared")
+    keys_cleared: int | None = Field(None, description="Number of keys cleared")
 
 
 class TaskStatusResponse(BaseModel):
     task_id: str = Field(..., description="Celery task ID")
     status: str = Field(..., description="Task status (PENDING, STARTED, SUCCESS, FAILURE)")
-    result: Optional[dict] = Field(None, description="Task result if completed")
-    error: Optional[str] = Field(None, description="Error message if failed")
+    result: dict | None = Field(None, description="Task result if completed")
+    error: str | None = Field(None, description="Error message if failed")
 
 
 # Endpoints
@@ -439,26 +439,29 @@ async def generate_product_embeddings_sync(
 ) -> dict:
     """
     Synchronously generate product embeddings (no Celery required).
-    
+
     This endpoint runs the embedding generation directly and returns when complete.
     Suitable for Cloud Scheduler or manual triggers.
-    
+
     Args:
         db: Database session
         batch_size: Number of products to process per batch
         max_products: Maximum number of products to process
-        
+
     Returns:
         Result summary with counts
     """
     try:
         from sqlalchemy import text as sql_text
+
         from ...ml.model_loader import model_registry
-        
+
         logger.info("Starting synchronous embedding generation")
-        
+
         # Get products without embeddings
-        result = db.execute(sql_text("""
+        result = db.execute(
+            sql_text(
+                """
             SELECT DISTINCT
                 p.id,
                 p.product_name,
@@ -471,60 +474,65 @@ async def generate_product_embeddings_sync(
             WHERE p.is_duplicate = false AND pe.id IS NULL
             ORDER BY p.id
             LIMIT :max_products
-        """), {"max_products": max_products})
-        
+        """
+            ),
+            {"max_products": max_products},
+        )
+
         products = [dict(row._mapping) for row in result]
         total = len(products)
-        
+
         logger.info(f"Found {total} products without embeddings")
-        
+
         if total == 0:
             return {
                 "status": "success",
                 "processed": 0,
                 "failed": 0,
-                "message": "All products already have embeddings"
+                "message": "All products already have embeddings",
             }
-        
+
         # Load CLIP model
         logger.info("Loading CLIP model...")
         model_registry.get_clip_model()
         logger.info(f"Model loaded on {model_registry.get_device()}")
-        
+
         # Process in batches
         successful = 0
         failed = 0
-        
+
         for i in range(0, total, batch_size):
-            batch = products[i:i+batch_size]
+            batch = products[i : i + batch_size]
             batch_num = i // batch_size + 1
             total_batches = (total + batch_size - 1) // batch_size
-            
+
             logger.info(f"Processing batch {batch_num}/{total_batches} ({len(batch)} products)")
-            
+
             try:
                 # Create text representations
                 texts = []
                 for p in batch:
                     parts = []
-                    if p.get('product_name'):
-                        parts.append(p['product_name'])
-                    if p.get('brand_name'):
+                    if p.get("product_name"):
+                        parts.append(p["product_name"])
+                    if p.get("brand_name"):
                         parts.append(f"by {p['brand_name']}")
-                    if p.get('description'):
-                        desc = p['description']
+                    if p.get("description"):
+                        desc = p["description"]
                         if len(desc) > 200:
                             desc = desc[:197] + "..."
                         parts.append(desc)
                     texts.append(" ".join(parts))
-                
+
                 # Generate embeddings
                 embeddings = model_registry.encode_text_batch(texts)
-                
+
                 # Store in database
                 for product, embedding in zip(batch, embeddings):
                     try:
-                        db.execute(sql_text("""
+                        db.execute(
+                            sql_text(
+                                """
                             INSERT INTO product_embeddings (
                                 product_id,
                                 embedding_type,
@@ -541,38 +549,38 @@ async def generate_product_embeddings_sync(
                                 embedding = EXCLUDED.embedding,
                                 model_version = EXCLUDED.model_version,
                                 updated_at = now()
-                        """), {
-                            'product_id': product['id'],
-                            'embedding': embedding.tolist()
-                        })
+                        """
+                            ),
+                            {"product_id": product["id"], "embedding": embedding.tolist()},
+                        )
                         successful += 1
                     except Exception as e:
                         failed += 1
                         logger.error(f"Failed for product {product['id']}: {e}")
-                
+
                 # Commit batch
                 db.commit()
                 logger.info(f"Batch {batch_num} complete ({successful}/{total} total)")
-                
+
             except Exception as e:
                 db.rollback()
                 logger.error(f"Batch {batch_num} failed: {e}", exc_info=True)
                 failed += len(batch)
-        
+
         logger.info(f"Completed: {successful} successful, {failed} failed")
         return {
             "status": "success",
             "processed": successful,
             "failed": failed,
             "total": total,
-            "message": f"Generated embeddings for {successful} products"
+            "message": f"Generated embeddings for {successful} products",
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to generate embeddings: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate embeddings: {str(e)}"
+            detail=f"Failed to generate embeddings: {str(e)}",
         )
 
 
@@ -606,12 +614,16 @@ async def rebuild_faiss_index_sync(
 
         if embedding_type == "text":
             # First try denormalized column on Product table for performance
-            result = db.execute(sql_text("""
+            result = db.execute(
+                sql_text(
+                    """
                 SELECT id, text_embedding
                 FROM products
                 WHERE text_embedding IS NOT NULL
                 ORDER BY id
-            """))
+            """
+                )
+            )
 
             embeddings_list = []
             product_ids = []
@@ -632,13 +644,19 @@ async def rebuild_faiss_index_sync(
 
             # If no embeddings found in denormalized column, fallback to product_embeddings table
             if len(embeddings_list) == 0:
-                logger.info("No embeddings in denormalized column, falling back to product_embeddings table")
-                result = db.execute(sql_text("""
+                logger.info(
+                    "No embeddings in denormalized column, falling back to product_embeddings table"
+                )
+                result = db.execute(
+                    sql_text(
+                        """
                     SELECT product_id, embedding
                     FROM product_embeddings
                     WHERE embedding_type = 'text'
                     ORDER BY product_id
-                """))
+                """
+                    )
+                )
 
                 for row in result:
                     product_id = str(row.product_id)
@@ -654,12 +672,17 @@ async def rebuild_faiss_index_sync(
                         product_ids.append(product_id)
         else:
             # For other types, use ProductEmbedding table
-            result = db.execute(sql_text("""
+            result = db.execute(
+                sql_text(
+                    """
                 SELECT product_id, embedding
                 FROM product_embeddings
                 WHERE embedding_type = :embedding_type
                 ORDER BY product_id
-            """), {"embedding_type": embedding_type})
+            """
+                ),
+                {"embedding_type": embedding_type},
+            )
 
             embeddings_list = []
             product_ids = []
@@ -710,36 +733,36 @@ async def rebuild_faiss_index_sync(
 
         # Upload to GCS if configured
         gcs_uploaded = False
-        gcs_bucket = os.getenv('GCS_FAISS_INDEX_BUCKET')
-        gcs_path = os.getenv('GCS_FAISS_INDEX_PATH')
+        gcs_bucket = os.getenv("GCS_FAISS_INDEX_BUCKET")
+        gcs_path = os.getenv("GCS_FAISS_INDEX_PATH")
 
         if gcs_bucket and gcs_path:
             try:
-                from ...ml.utils.gcs_utils import delete_faiss_index_from_gcs, upload_faiss_index_to_gcs
+                from ...ml.utils.gcs_utils import (
+                    delete_faiss_index_from_gcs,
+                    upload_faiss_index_to_gcs,
+                )
 
                 # Delete old index from GCS first
                 logger.info(f"Deleting old FAISS index from GCS: gs://{gcs_bucket}/{gcs_path}/")
-                delete_faiss_index_from_gcs(
-                    bucket_name=gcs_bucket,
-                    gcs_path=gcs_path
-                )
+                delete_faiss_index_from_gcs(bucket_name=gcs_bucket, gcs_path=gcs_path)
 
                 # Upload new index to GCS
                 logger.info(f"Uploading new FAISS index to GCS: gs://{gcs_bucket}/{gcs_path}/")
                 gcs_uploaded = upload_faiss_index_to_gcs(
-                    local_path=save_path,
-                    bucket_name=gcs_bucket,
-                    gcs_path=gcs_path
+                    local_path=save_path, bucket_name=gcs_bucket, gcs_path=gcs_path
                 )
 
                 if gcs_uploaded:
-                    logger.info(f"Successfully uploaded FAISS index to GCS")
+                    logger.info("Successfully uploaded FAISS index to GCS")
                 else:
-                    logger.warning(f"Failed to upload FAISS index to GCS")
+                    logger.warning("Failed to upload FAISS index to GCS")
             except Exception as e:
                 logger.error(f"Error managing GCS index: {e}", exc_info=True)
         else:
-            logger.info("GCS upload skipped (GCS_FAISS_INDEX_BUCKET or GCS_FAISS_INDEX_PATH not configured)")
+            logger.info(
+                "GCS upload skipped (GCS_FAISS_INDEX_BUCKET or GCS_FAISS_INDEX_PATH not configured)"
+            )
 
         return {
             "status": "success",
@@ -750,12 +773,13 @@ async def rebuild_faiss_index_sync(
             "gcs_uploaded": gcs_uploaded,
             "gcs_bucket": gcs_bucket if gcs_bucket else None,
             "stats": stats,
-            "message": f"FAISS index rebuilt with {stats['num_vectors']} vectors" + (f" and uploaded to GCS" if gcs_uploaded else "")
+            "message": f"FAISS index rebuilt with {stats['num_vectors']} vectors"
+            + (" and uploaded to GCS" if gcs_uploaded else ""),
         }
 
     except Exception as e:
         logger.error(f"Failed to rebuild FAISS index: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to rebuild FAISS index: {str(e)}"
+            detail=f"Failed to rebuild FAISS index: {str(e)}",
         )

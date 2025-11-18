@@ -218,7 +218,7 @@ async def complete_onboarding(
 
         # Use current_user directly - it's already attached to the db session
         # No need to re-query since get_current_user uses the same db session
-        
+
         # Update user preferences first (before creating embedding)
         if request.price_min is not None:
             current_user.price_band_min = request.price_min
@@ -228,7 +228,7 @@ async def complete_onboarding(
         # Mark user as onboarded (do this BEFORE saving embedding)
         current_user.onboarded = True
         current_user.updated_at = datetime.utcnow()
-        
+
         # Flush to make user changes visible within this transaction (but don't commit yet)
         # This makes the user record visible to the foreign key check without ending the transaction
         logger.info(f"Flushing user changes for {current_user.id}")
@@ -248,7 +248,7 @@ async def complete_onboarding(
                 "created_at": datetime.utcnow().isoformat(),
             },
         )
-        
+
         logger.info(f"Embedding saved to session for user {current_user.id}")
 
         # Also track these as initial interactions (likes)
@@ -264,7 +264,9 @@ async def complete_onboarding(
 
         # CRITICAL: Commit everything together in ONE transaction
         # This ensures all changes (user, embedding, interactions) are committed atomically
-        logger.info(f"Committing all changes (user, embedding, interactions) for user {current_user.id}")
+        logger.info(
+            f"Committing all changes (user, embedding, interactions) for user {current_user.id}"
+        )
         db.commit()
         logger.info(f"All changes committed successfully for user {current_user.id}")
 
@@ -292,9 +294,7 @@ async def complete_onboarding(
             user_id_str = str(current_user.id)
         except:
             user_id_str = "unknown"
-        logger.error(
-            f"Failed to complete onboarding for user {user_id_str}: {e}", exc_info=True
-        )
+        logger.error(f"Failed to complete onboarding for user {user_id_str}: {e}", exc_info=True)
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -6,13 +6,13 @@ and uploading ML artifacts like FAISS indices.
 """
 
 import logging
-import os
 from pathlib import Path
 from typing import Optional
 
 try:
-    from google.cloud import storage
     from google.api_core import exceptions as gcp_exceptions
+    from google.cloud import storage
+
     GCS_AVAILABLE = True
 except ImportError:
     GCS_AVAILABLE = False
@@ -23,14 +23,12 @@ logger = logging.getLogger(__name__)
 
 class GCSError(Exception):
     """Base exception for GCS operations."""
+
     pass
 
 
 def download_faiss_index_from_gcs(
-    bucket_name: str,
-    gcs_path: str,
-    local_path: Path,
-    required_files: Optional[list] = None
+    bucket_name: str, gcs_path: str, local_path: Path, required_files: list | None = None
 ) -> bool:
     """
     Download FAISS index files from GCS to local directory.
@@ -52,7 +50,7 @@ def download_faiss_index_from_gcs(
         return False
 
     if required_files is None:
-        required_files = ['index.faiss', 'id_mapping.npz', 'metadata.npy']
+        required_files = ["index.faiss", "id_mapping.npz", "metadata.npy"]
 
     try:
         # Initialize GCS client
@@ -115,10 +113,7 @@ def download_faiss_index_from_gcs(
 
 
 def upload_faiss_index_to_gcs(
-    local_path: Path,
-    bucket_name: str,
-    gcs_path: str,
-    files_to_upload: Optional[list] = None
+    local_path: Path, bucket_name: str, gcs_path: str, files_to_upload: list | None = None
 ) -> bool:
     """
     Upload FAISS index files from local directory to GCS.
@@ -140,7 +135,7 @@ def upload_faiss_index_to_gcs(
         return False
 
     if files_to_upload is None:
-        files_to_upload = ['index.faiss', 'id_mapping.npz', 'metadata.npy']
+        files_to_upload = ["index.faiss", "id_mapping.npz", "metadata.npy"]
 
     try:
         # Initialize GCS client
@@ -207,7 +202,7 @@ def delete_faiss_index_from_gcs(bucket_name: str, gcs_path: str) -> bool:
         client = storage.Client()
         bucket = client.bucket(bucket_name)
 
-        required_files = ['index.faiss', 'id_mapping.npz', 'metadata.npy']
+        required_files = ["index.faiss", "id_mapping.npz", "metadata.npy"]
         deleted_files = []
 
         for filename in required_files:
@@ -252,7 +247,7 @@ def check_gcs_index_exists(bucket_name: str, gcs_path: str) -> bool:
         client = storage.Client()
         bucket = client.bucket(bucket_name)
 
-        required_files = ['index.faiss', 'id_mapping.npz', 'metadata.npy']
+        required_files = ["index.faiss", "id_mapping.npz", "metadata.npy"]
 
         for filename in required_files:
             blob_path = f"{gcs_path}/{filename}" if gcs_path else filename

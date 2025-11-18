@@ -82,7 +82,9 @@ async def remove_favorite(
     try:
         product_uuid = UUID(product_id)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid product ID format")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid product ID format"
+        )
 
     # Delete from user_favorites
     deleted_count = (
@@ -112,15 +114,16 @@ async def remove_favorite(
     logger.info(f"Attempting to dispatch Celery task for user {current_user.id} after unlike")
     try:
         from ...tasks.embeddings import update_user_embedding
-        
-        result = update_user_embedding.delay(
-            user_id=str(current_user.id),
-            max_interactions=50
+
+        result = update_user_embedding.delay(user_id=str(current_user.id), max_interactions=50)
+        logger.info(
+            f"✓ Dispatched Celery task {result.id} to update embeddings for user {current_user.id} after unlike"
         )
-        logger.info(f"✓ Dispatched Celery task {result.id} to update embeddings for user {current_user.id} after unlike")
     except Exception as e:
         # Don't fail the request if Celery is unavailable
-        logger.warning(f"Failed to dispatch embedding update for user {current_user.id}: {e}. Continuing without background update.")
+        logger.warning(
+            f"Failed to dispatch embedding update for user {current_user.id}: {e}. Continuing without background update."
+        )
 
     return None
 
@@ -161,8 +164,12 @@ async def get_interaction_history(
                 interaction_id=str(interaction.id),  # Convert UUID to string
                 product_id=str(interaction.product_id),
                 product_title=product.product_name if product else None,
-                product_image_url=(product.merchant_image_url or product.aw_image_url) if product else None,
-                product_price=float(product.search_price) if (product and product.search_price) else None,
+                product_image_url=(
+                    (product.merchant_image_url or product.aw_image_url) if product else None
+                ),
+                product_price=(
+                    float(product.search_price) if (product and product.search_price) else None
+                ),
                 interaction_type=interaction.interaction_type,
                 created_at=interaction.created_at,
                 context=interaction.context,
@@ -231,6 +238,7 @@ async def get_user_stats(
 
     # Calculate account age
     from datetime import timezone
+
     account_age = (datetime.now(timezone.utc) - current_user.created_at).days
 
     return UserStatsResponse(

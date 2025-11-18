@@ -129,7 +129,10 @@ class UserEmbedding(Base):
 
     # Primary key is user_id (one embedding record per user)
     user_id = Column(
-        PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, nullable=False
+        PGUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
     )
 
     # pgvector embeddings (512-dimensional for CLIP ViT-B-32)
@@ -392,7 +395,9 @@ class Product(Base):
     embeddings_rel = relationship(
         "ProductEmbedding", back_populates="product", cascade="all, delete-orphan"
     )
-    favorited_by = relationship("UserFavorite", back_populates="product", cascade="all, delete-orphan")
+    favorited_by = relationship(
+        "UserFavorite", back_populates="product", cascade="all, delete-orphan"
+    )
 
     # Unique constraint
     __table_args__ = (
