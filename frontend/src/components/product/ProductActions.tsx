@@ -4,21 +4,28 @@ import { useState } from "react";
 import { Heart, ShoppingCart, Check } from "lucide-react";
 import { useTrackInteraction } from "@/lib/queries/feedback";
 import { InteractionType } from "@/types/enums";
+import { useCartStore } from "@/lib/stores/cartStore";
+import { useToast } from "@/components/ui/Toast";
+import { ProductResult } from "@/types/api";
 
 interface ProductActionsProps {
   productId: string;
   userId?: string;
   inStock: boolean;
+  product?: ProductResult;
 }
 
 export function ProductActions({
   productId,
   userId,
   inStock,
+  product,
 }: ProductActionsProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const feedbackMutation = useTrackInteraction();
+  const addToCart = useCartStore((state) => state.addItem);
+  const toast = useToast();
 
   const handleLike = () => {
     if (!userId) return; // Skip if not authenticated
@@ -31,15 +38,41 @@ export function ProductActions({
   };
 
   const handleAddToCart = () => {
-    if (!inStock) return;
-    if (!userId) return; // Skip if not authenticated
+    if (!inStock) {
+      toast.error("This product is out of stock");
+      return;
+    }
 
-    setIsAddedToCart(true);
+    if (!userId) {
+      toast.warning("Please login to add to cart");
+      return;
+    }
+
+    if (!product) {
+      toast.error("Product information unavailable");
+      return;
+    }
+
+    // Add to cart store
+    addToCart({
+      productId: productId,
+      title: product.title,
+      price: product.price || 0,
+      currency: product.currency || "$",
+      imageUrl: product.image_url,
+      productUrl: product.product_url,
+    });
+
+    // Track interaction in background
     feedbackMutation.mutate({
       user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.ADD_TO_CART,
     });
+
+    // Show success state
+    setIsAddedToCart(true);
+    toast.success("Added to cart", product.title);
 
     // Reset after 3 seconds
     setTimeout(() => {

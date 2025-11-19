@@ -7,10 +7,12 @@ import { Heart, ShoppingCart } from "lucide-react";
 import { useTrackInteraction } from "@/lib/queries/feedback";
 import { InteractionType } from "@/types/enums";
 import Link from "next/link";
+import { useCartStore } from "@/lib/stores/cartStore";
+import { useToast } from "@/components/ui/Toast";
 
 interface MasonryCardProps {
   product: ProductResult;
-  userId?: number;
+  userId?: string;
   onLike: (productId: string, e: React.MouseEvent) => void;
   onAddToCart: (productId: string, e: React.MouseEvent) => void;
   onClick: (productId: string) => void;
@@ -110,6 +112,8 @@ interface MasonryGridProps {
 export function MasonryGrid({ products, userId }: MasonryGridProps) {
   const [columns, setColumns] = useState(4);
   const feedbackMutation = useTrackInteraction();
+  const addToCart = useCartStore((state) => state.addItem);
+  const toast = useToast();
 
   useEffect(() => {
     const updateColumns = () => {
@@ -147,12 +151,42 @@ export function MasonryGrid({ products, userId }: MasonryGridProps) {
   const handleAddToCart = (productId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!userId) return; // Skip if not authenticated
+
+    if (!userId) {
+      toast.warning("Please login to add to cart");
+      return;
+    }
+
+    // Find the product in the list
+    const product = products.find(p => p.product_id === productId);
+    if (!product) {
+      toast.error("Product not found");
+      return;
+    }
+
+    if (!product.in_stock) {
+      toast.error("This product is out of stock");
+      return;
+    }
+
+    // Add to cart store
+    addToCart({
+      productId: productId,
+      title: product.title,
+      price: product.price || 0,
+      currency: product.currency || "$",
+      imageUrl: product.image_url,
+      productUrl: product.product_url,
+    });
+
+    // Track interaction in background
     feedbackMutation.mutate({
       user_id: String(userId),
       product_id: productId,
       interaction_type: InteractionType.ADD_TO_CART,
     });
+
+    toast.success("Added to cart", product.title);
   };
 
   const handleClick = (productId: string) => {

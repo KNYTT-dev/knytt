@@ -185,6 +185,7 @@ export default function ProductDetailClient({
                 productId={product.product_id}
                 userId={userId}
                 inStock={product.in_stock}
+                product={product}
               />
             </div>
           </div>
