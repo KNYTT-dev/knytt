@@ -46,7 +46,9 @@ export function ProductPricing({ product }: ProductPricingProps) {
       </div>
 
       {/* Stock Status */}
-      <div className="border-t border-blush pt-4">
+      {/* TEMPORARY: Stock display hidden until data re-ingestion */}
+      {/* TODO: Re-enable after re-ingesting product data with new stock validation */}
+      {/* <div className="border-t border-blush pt-4">
         {product.in_stock ? (
           <div className="flex items-center gap-2 text-green-600">
             <CheckCircle className="w-5 h-5" />
@@ -63,7 +65,7 @@ export function ProductPricing({ product }: ProductPricingProps) {
             <span className="font-medium">Out of Stock</span>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Shipping Info */}
       <div className="bg-gradient-to-r from-sage/10 to-blush/30 rounded-lg p-4">

@@ -68,9 +68,11 @@ function MasonryCard({ product, userId, onLike, onAddToCart, onClick }: MasonryC
               <button
                 onClick={(e) => onAddToCart(product.product_id, e)}
                 className="p-2.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
-                disabled={!product.in_stock}
+                // disabled={!product.in_stock} // TEMPORARY: Disabled until data re-ingestion
               >
-                <ShoppingCart className={`w-5 h-5 ${product.in_stock ? "text-sage" : "text-gray-400"}`} />
+                <ShoppingCart className="w-5 h-5 text-sage" />
+                {/* TEMPORARY: Stock-based styling disabled */}
+                {/* <ShoppingCart className={`w-5 h-5 ${product.in_stock ? "text-sage" : "text-gray-400"}`} /> */}
               </button>
             </div>
           </div>

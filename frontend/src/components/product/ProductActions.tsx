@@ -45,7 +45,9 @@ export function ProductActions({
   };
 
   const handleAddToCart = () => {
-    if (!inStock) return;
+    // TEMPORARY: Stock check disabled until data re-ingestion
+    // TODO: Re-enable after re-ingesting product data with new stock validation
+    // if (!inStock) return;
     if (!userId) return; // Skip if not authenticated
 
     setIsAddedToCart(true);
@@ -64,13 +66,12 @@ export function ProductActions({
   return (
     <div className="space-y-3">
       {/* Add to Cart Button */}
+      {/* TEMPORARY: Stock-based UI disabled until data re-ingestion */}
       <button
         onClick={handleAddToCart}
-        disabled={!inStock}
+        // disabled={!inStock} // TEMPORARY: Disabled until data re-ingestion
         className={`w-full px-6 py-4 rounded-full font-semibold text-lg transition-all shadow-lg ${
-          !inStock
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : isAddedToCart
+          isAddedToCart
             ? "bg-green-600 text-white"
             : "bg-gradient-to-r from-sage to-evergreen text-white hover:shadow-xl hover:scale-105"
         }`}
@@ -84,7 +85,7 @@ export function ProductActions({
           ) : (
             <>
               <ShoppingCart className="w-6 h-6" />
-              <span>{inStock ? "Add to Cart" : "Out of Stock"}</span>
+              <span>Add to Cart</span>
             </>
           )}
         </span>

@@ -74,10 +74,12 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
       return;
     }
 
-    if (!product.in_stock) {
-      toast.error("This product is out of stock");
-      return;
-    }
+    // TEMPORARY: Stock check disabled until data re-ingestion
+    // TODO: Re-enable after re-ingesting product data with new stock validation
+    // if (!product.in_stock) {
+    //   toast.error("This product is out of stock");
+    //   return;
+    // }
 
     // Optimistically add to cart store
     addToCart({
@@ -221,15 +223,13 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
             )}
           </div>
 
-          <Tooltip content={product.in_stock ? "Add to cart" : "Out of stock"}>
+          {/* TEMPORARY: Stock-based UI disabled until data re-ingestion */}
+          {/* TODO: Re-enable conditional rendering after re-ingesting product data */}
+          <Tooltip content="Add to cart">
             <button
               onClick={handleAddToCart}
-              disabled={!product.in_stock}
-              className={`p-3 rounded-full transition-all duration-[var(--duration-fast)] shadow-md hover:shadow-lg active:scale-95 ${
-                product.in_stock
-                  ? "bg-pinterest-red text-white hover:bg-dark-red"
-                  : "bg-light-gray text-gray cursor-not-allowed"
-              }`}
+              // disabled={!product.in_stock}
+              className="p-3 rounded-full transition-all duration-[var(--duration-fast)] shadow-md hover:shadow-lg active:scale-95 bg-pinterest-red text-white hover:bg-dark-red"
               aria-label="Add to cart"
             >
               <ShoppingCart className="h-5 w-5" />
