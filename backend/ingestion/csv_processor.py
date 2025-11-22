@@ -475,6 +475,7 @@ class CSVIngestionPipeline:
                     merchant_name, aw_product_id, brand_name, brand_id,
                     description, category_name, category_id,
                     search_price, store_price, rrp_price, currency,
+                    merchant_deep_link,
                     merchant_image_url, aw_image_url, alternate_images,
                     fashion_category, fashion_size, colour,
                     in_stock, stock_quantity,
@@ -484,6 +485,7 @@ class CSVIngestionPipeline:
                     :merchant_name, :aw_product_id, :brand_name, :brand_id,
                     :description, :category_name, :category_id,
                     :search_price, :store_price, :rrp_price, :currency,
+                    :merchant_deep_link,
                     :merchant_image_url, :aw_image_url, :alternate_images,
                     :fashion_category, :fashion_size, :colour,
                     :in_stock, :stock_quantity,
@@ -507,6 +509,7 @@ class CSVIngestionPipeline:
                 "store_price": product.store_price,
                 "rrp_price": product.rrp_price,
                 "currency": product.currency,
+                "merchant_deep_link": product.merchant_deep_link,
                 "merchant_image_url": product.merchant_image_url,
                 "aw_image_url": product.aw_image_url,
                 "alternate_images": (

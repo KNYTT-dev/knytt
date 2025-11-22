@@ -537,6 +537,9 @@ class ProductCanonical(BaseModel):
     rrp_price: Optional[Decimal] = None
     currency: str = "GBP"
 
+    # Links
+    merchant_deep_link: Optional[str] = None
+
     # Images
     merchant_image_url: Optional[str] = None
     aw_image_url: Optional[str] = None
@@ -576,6 +579,9 @@ class ProductCanonical(BaseModel):
             store_price=ingestion.store_price,
             rrp_price=ingestion.rrp_price,
             currency=ingestion.currency,
+            merchant_deep_link=(
+                str(ingestion.merchant_deep_link) if ingestion.merchant_deep_link else None
+            ),
             merchant_image_url=(
                 str(ingestion.merchant_image_url) if ingestion.merchant_image_url else None
             ),
