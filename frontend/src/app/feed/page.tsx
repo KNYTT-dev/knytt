@@ -150,7 +150,7 @@ export default function FeedPage() {
           <RecommendationCarousel
             title="Recommended for You"
             products={feedData.results}
-            userId={userId ? Number(userId) : undefined}
+            userId={userId}
             context="personalized_feed"
           />
         ) : (

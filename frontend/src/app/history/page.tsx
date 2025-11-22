@@ -28,7 +28,7 @@ const INTERACTION_TYPES = [
 export default function HistoryPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const userId = user?.id ? Number(user.id) : undefined;
+  const userId = user?.id;
   const [selectedType, setSelectedType] = useState("");
   const [limit] = useState(50);
 

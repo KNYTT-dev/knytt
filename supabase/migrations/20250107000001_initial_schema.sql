@@ -80,7 +80,7 @@ CREATE INDEX IF NOT EXISTS idx_products_embedding ON products
 -- USERS TABLE (extends auth.users)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS user_profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
 
     -- Profile info
     username TEXT UNIQUE,
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 -- USER EMBEDDINGS TABLE
 -- =====================================================
 CREATE TABLE IF NOT EXISTS user_embeddings (
-    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
 
     -- Long-term taste profile (EWMA of interactions)
     long_term_embedding vector(512),
@@ -135,7 +135,7 @@ CREATE INDEX IF NOT EXISTS idx_user_embeddings_last_active ON user_embeddings(la
 -- =====================================================
 CREATE TABLE IF NOT EXISTS user_interactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
 
     -- Interaction types
@@ -167,7 +167,7 @@ CREATE INDEX IF NOT EXISTS idx_interactions_session ON user_interactions(session
 -- USER FAVORITES TABLE
 -- =====================================================
 CREATE TABLE IF NOT EXISTS user_favorites (
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
 
     -- Metadata
@@ -216,7 +216,7 @@ CREATE INDEX IF NOT EXISTS idx_ingestion_logs_status ON ingestion_logs(status, c
 -- =====================================================
 CREATE TABLE IF NOT EXISTS search_queries (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
 
     -- Query details
     query_text TEXT NOT NULL,

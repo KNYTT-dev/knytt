@@ -6,7 +6,7 @@ import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { RecommendRequest, RecommendResponse } from "@/types/api";
 import { RecommendationContext } from "@/types/enums";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 /**
  * Hook to get personalized feed recommendations
@@ -41,7 +41,7 @@ export function useFeed(
       return response.json();
     },
     enabled: !!userId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 15, // 15 seconds - allows embedding updates to reflect quickly
     retry: (failureCount, error) => {
       // Don't retry on 404 (user hasn't completed onboarding)
       if (error.message?.includes("no preference profile") || error.message?.includes("404")) {
@@ -68,7 +68,7 @@ export function useSimilarProducts(
       const request: RecommendRequest = {
         user_id: userId!,
         context: RecommendationContext.SIMILAR,
-        product_id: productId!,
+        product_id: productId,
         limit: 12,
       };
 

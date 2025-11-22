@@ -10,7 +10,7 @@ import Link from "next/link";
 
 interface MasonryCardProps {
   product: ProductResult;
-  userId?: number;
+  userId?: string; // UUID string
   onLike: (productId: string, e: React.MouseEvent) => void;
   onAddToCart: (productId: string, e: React.MouseEvent) => void;
   onClick: (productId: string) => void;
@@ -68,22 +68,15 @@ function MasonryCard({ product, userId, onLike, onAddToCart, onClick }: MasonryC
               <button
                 onClick={(e) => onAddToCart(product.product_id, e)}
                 className="p-2.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
-                disabled={!product.in_stock}
+                // disabled={!product.in_stock} // TEMPORARY: Disabled until data re-ingestion
               >
-                <ShoppingCart className={`w-5 h-5 ${product.in_stock ? "text-sage" : "text-gray-400"}`} />
+                <ShoppingCart className="w-5 h-5 text-sage" />
+                {/* TEMPORARY: Stock-based styling disabled */}
+                {/* <ShoppingCart className={`w-5 h-5 ${product.in_stock ? "text-sage" : "text-gray-400"}`} /> */}
               </button>
             </div>
           </div>
         </div>
-
-        {/* Stock Badge */}
-        {!product.in_stock && (
-          <div className="absolute top-4 left-4">
-            <span className="px-3 py-1 text-xs font-semibold bg-red-500 text-white rounded-full">
-              Out of Stock
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Product Info */}
@@ -113,7 +106,7 @@ function MasonryCard({ product, userId, onLike, onAddToCart, onClick }: MasonryC
 
 interface MasonryGridProps {
   products: ProductResult[];
-  userId?: number;
+  userId?: string;
 }
 
 export function MasonryGrid({ products, userId }: MasonryGridProps) {
@@ -147,7 +140,7 @@ export function MasonryGrid({ products, userId }: MasonryGridProps) {
     e.stopPropagation();
     if (!userId) return; // Skip if not authenticated
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.LIKE,
     });
@@ -158,7 +151,7 @@ export function MasonryGrid({ products, userId }: MasonryGridProps) {
     e.stopPropagation();
     if (!userId) return; // Skip if not authenticated
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.ADD_TO_CART,
     });
@@ -167,7 +160,7 @@ export function MasonryGrid({ products, userId }: MasonryGridProps) {
   const handleClick = (productId: string) => {
     if (!userId) return; // Skip if not authenticated
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.CLICK,
     });

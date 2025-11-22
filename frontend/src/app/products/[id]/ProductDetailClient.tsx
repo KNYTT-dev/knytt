@@ -39,8 +39,8 @@ export default function ProductDetailClient({
   useEffect(() => {
     if (!product && productId) {
       setIsLoading(true);
-      // Direct API call to Cloud Run backend (CORS enabled)
-      const API_URL = "https://knytt-api-prod-kouzugqpra-uc.a.run.app";
+      // Use environment variable or fall back to /api proxy (Next.js rewrites)
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
       fetch(`${API_URL}/api/v1/products/${productId}`)
         .then((res) => {

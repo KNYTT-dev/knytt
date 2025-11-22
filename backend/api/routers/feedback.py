@@ -88,17 +88,20 @@ async def record_feedback(
     embeddings_updated = False
     task_id = None
     if request.update_embeddings:
+        logger.info(
+            f"Attempting to dispatch Celery task for user {request.user_id} (interaction: {request.interaction_type.value})"
+        )
         try:
             # Dispatch Celery task for async processing
             from ...tasks.embeddings import update_user_embedding
 
-            result = update_user_embedding.delay(
-                user_external_id=str(request.user_id), max_interactions=50
-            )
+            result = update_user_embedding.delay(user_id=str(request.user_id), max_interactions=50)
             task_id = result.id
             embeddings_updated = True  # Marked as queued
 
-            logger.debug(f"Dispatched embedding update task {task_id} for user {request.user_id}")
+            logger.info(
+                f"✓ Dispatched Celery task {task_id} to update embeddings for user {request.user_id}"
+            )
         except Exception as e:
             # Redis/Celery not available (e.g., in Cloud Run without Redis)
             # Continue without background embedding update
@@ -164,9 +167,7 @@ def _store_interaction(request: FeedbackRequest, db: Session) -> Optional[str]:
         try:
             # Try as UUID (database ID)
             user_uuid = UUID(user_id_str)
-            user = db.execute(
-                select(User).where(User.id == user_uuid)
-            ).scalar_one_or_none()
+            user = db.execute(select(User).where(User.id == user_uuid)).scalar_one_or_none()
 
             if user:
                 logger.debug(f"Found user by database ID: {user_uuid}")

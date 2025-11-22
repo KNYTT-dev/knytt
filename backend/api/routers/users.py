@@ -3,6 +3,7 @@ User-specific routes.
 Handles user favorites, history, statistics, and preferences.
 """
 
+import logging
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
@@ -10,6 +11,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from ...db.models import Product, User, UserInteraction
 from ..dependencies import get_current_user, get_db
@@ -23,7 +26,7 @@ from ..schemas.user import (
     UserStatsResponse,
 )
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(prefix="/api/v1/users", tags=["Users"])
 
 
 @router.get("/me/favorites", response_model=FavoritesResponse)
@@ -73,13 +76,15 @@ async def remove_favorite(
     """
     Remove a product from favorites (unlike).
     """
-    from ...db.models import UserFavorite
+    from ...db.models import UserFavorite, UserInteraction
 
     # Convert string product_id to UUID
     try:
         product_uuid = UUID(product_id)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid product ID format")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid product ID format"
+        )
 
     # Delete from user_favorites
     deleted_count = (
@@ -91,10 +96,34 @@ async def remove_favorite(
         .delete()
     )
 
-    db.commit()
-
     if deleted_count == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Favorite not found")
+
+    # Track the "unlike" interaction
+    interaction = UserInteraction(
+        user_id=current_user.id,
+        product_id=product_uuid,
+        interaction_type="unlike",
+        context="favorites_page",
+        metadata={"source": "remove_favorite"},
+    )
+    db.add(interaction)
+    db.commit()
+
+    # Trigger user embedding update (async via Celery)
+    logger.info(f"Attempting to dispatch Celery task for user {current_user.id} after unlike")
+    try:
+        from ...tasks.embeddings import update_user_embedding
+
+        result = update_user_embedding.delay(user_id=str(current_user.id), max_interactions=50)
+        logger.info(
+            f"✓ Dispatched Celery task {result.id} to update embeddings for user {current_user.id} after unlike"
+        )
+    except Exception as e:
+        # Don't fail the request if Celery is unavailable
+        logger.warning(
+            f"Failed to dispatch embedding update for user {current_user.id}: {e}. Continuing without background update."
+        )
 
     return None
 
@@ -132,11 +161,15 @@ async def get_interaction_history(
     for interaction, product in results:
         interactions.append(
             InteractionHistoryItem(
-                interaction_id=interaction.id,
+                interaction_id=str(interaction.id),  # Convert UUID to string
                 product_id=str(interaction.product_id),
                 product_title=product.product_name if product else None,
-                product_image_url=(product.merchant_image_url or product.aw_image_url) if product else None,
-                product_price=float(product.search_price) if (product and product.search_price) else None,
+                product_image_url=(
+                    (product.merchant_image_url or product.aw_image_url) if product else None
+                ),
+                product_price=(
+                    float(product.search_price) if (product and product.search_price) else None
+                ),
                 interaction_type=interaction.interaction_type,
                 created_at=interaction.created_at,
                 context=interaction.context,
@@ -169,11 +202,11 @@ async def get_user_stats(
 
     # Get favorite categories (top interacted categories)
     category_stats = (
-        db.query(Product.category, func.count(UserInteraction.id).label("interaction_count"))
-        .join(UserInteraction, Product.product_id == UserInteraction.product_id)
+        db.query(Product.category_name, func.count(UserInteraction.id).label("interaction_count"))
+        .join(UserInteraction, Product.id == UserInteraction.product_id)
         .filter(UserInteraction.user_id == current_user.id)
-        .filter(Product.category.isnot(None))
-        .group_by(Product.category)
+        .filter(Product.category_name.isnot(None))
+        .group_by(Product.category_name)
         .order_by(desc("interaction_count"))
         .limit(10)
         .all()
@@ -183,11 +216,11 @@ async def get_user_stats(
 
     # Get favorite brands
     brand_stats = (
-        db.query(Product.brand, func.count(UserInteraction.id).label("interaction_count"))
-        .join(UserInteraction, Product.product_id == UserInteraction.product_id)
+        db.query(Product.brand_name, func.count(UserInteraction.id).label("interaction_count"))
+        .join(UserInteraction, Product.id == UserInteraction.product_id)
         .filter(UserInteraction.user_id == current_user.id)
-        .filter(Product.brand.isnot(None))
-        .group_by(Product.brand)
+        .filter(Product.brand_name.isnot(None))
+        .group_by(Product.brand_name)
         .order_by(desc("interaction_count"))
         .limit(10)
         .all()
@@ -197,14 +230,16 @@ async def get_user_stats(
 
     # Get average price point
     avg_price = (
-        db.query(func.avg(Product.price))
-        .join(UserInteraction, Product.product_id == UserInteraction.product_id)
+        db.query(func.avg(Product.search_price))
+        .join(UserInteraction, Product.id == UserInteraction.product_id)
         .filter(UserInteraction.user_id == current_user.id)
         .scalar()
     )
 
     # Calculate account age
-    account_age = (datetime.utcnow() - current_user.created_at).days
+    from datetime import timezone
+
+    account_age = (datetime.now(timezone.utc) - current_user.created_at).days
 
     return UserStatsResponse(
         total_interactions=current_user.total_interactions,
@@ -230,7 +265,7 @@ async def update_user_preferences(
     """
     Update user preferences.
     """
-    # Update fields if provided
+    # Update fields if provided (including empty arrays/lists)
     if preferences.preferred_categories is not None:
         current_user.preferred_categories = preferences.preferred_categories
 

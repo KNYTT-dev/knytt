@@ -49,7 +49,7 @@ class UserStatsResponse(BaseModel):
 class InteractionHistoryItem(BaseModel):
     """Single interaction history item."""
 
-    interaction_id: int
+    interaction_id: str  # UUID
     product_id: str
     product_title: Optional[str]
     product_image_url: Optional[str]

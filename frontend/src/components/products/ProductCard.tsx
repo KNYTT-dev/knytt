@@ -1,18 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Heart, ShoppingCart } from "lucide-react";
 import { ProductResult } from "@/types/api";
 import { InteractionType } from "@/types/enums";
 import { useTrackInteraction } from "@/lib/queries/feedback";
+import { useFavorites } from "@/lib/queries/user";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useToast } from "@/components/ui/Toast";
 import Tooltip from "@/components/ui/Tooltip";
 
 interface ProductCardProps {
   product: ProductResult;
-  userId?: number;
+  userId?: string;
   onProductClick?: (productId: string) => void;
 }
 
@@ -24,6 +25,19 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
   const feedbackMutation = useTrackInteraction();
   const addToCart = useCartStore((state) => state.addItem);
   const toast = useToast();
+  
+  // Fetch user's favorites to check if this product is already favorited
+  const { data: favorites } = useFavorites(userId);
+
+  // Update isLiked when favorites data loads
+  useEffect(() => {
+    if (favorites?.favorites && product.product_id) {
+      const isFavorited = favorites.favorites.some(
+        (fav) => fav.product_id === product.product_id
+      );
+      setIsLiked(isFavorited);
+    }
+  }, [favorites, product.product_id]);
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
@@ -46,7 +60,7 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
     }
 
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: product.product_id,
       interaction_type: InteractionType.LIKE,
     });
@@ -60,10 +74,12 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
       return;
     }
 
-    if (!product.in_stock) {
-      toast.error("This product is out of stock");
-      return;
-    }
+    // TEMPORARY: Stock check disabled until data re-ingestion
+    // TODO: Re-enable after re-ingesting product data with new stock validation
+    // if (!product.in_stock) {
+    //   toast.error("This product is out of stock");
+    //   return;
+    // }
 
     // Optimistically add to cart store
     addToCart({
@@ -77,7 +93,7 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
 
     // Track interaction in background
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: product.product_id,
       interaction_type: InteractionType.ADD_TO_CART,
     });
@@ -88,7 +104,7 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
   const handleCardClick = () => {
     if (userId) {
       feedbackMutation.mutate({
-        user_id: String(userId),
+        user_id: userId,
         product_id: product.product_id,
         interaction_type: InteractionType.CLICK,
       });
@@ -146,21 +162,6 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
             />
           </button>
         </Tooltip>
-
-        {/* Stock Badge */}
-        {product.in_stock !== undefined && (
-          <div className="absolute bottom-3 left-3">
-            {product.in_stock ? (
-              <span className="px-3 py-1.5 text-xs font-semibold bg-green-500 text-white rounded-full shadow-md">
-                In Stock
-              </span>
-            ) : (
-              <span className="px-3 py-1.5 text-xs font-semibold bg-red-500 text-white rounded-full shadow-md">
-                Out of Stock
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Product Info */}
@@ -222,15 +223,13 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
             )}
           </div>
 
-          <Tooltip content={product.in_stock ? "Add to cart" : "Out of stock"}>
+          {/* TEMPORARY: Stock-based UI disabled until data re-ingestion */}
+          {/* TODO: Re-enable conditional rendering after re-ingesting product data */}
+          <Tooltip content="Add to cart">
             <button
               onClick={handleAddToCart}
-              disabled={!product.in_stock}
-              className={`p-3 rounded-full transition-all duration-[var(--duration-fast)] shadow-md hover:shadow-lg active:scale-95 ${
-                product.in_stock
-                  ? "bg-pinterest-red text-white hover:bg-dark-red"
-                  : "bg-light-gray text-gray cursor-not-allowed"
-              }`}
+              // disabled={!product.in_stock}
+              className="p-3 rounded-full transition-all duration-[var(--duration-fast)] shadow-md hover:shadow-lg active:scale-95 bg-pinterest-red text-white hover:bg-dark-red"
               aria-label="Add to cart"
             >
               <ShoppingCart className="h-5 w-5" />

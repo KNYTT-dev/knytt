@@ -6,8 +6,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FeedbackRequest, FeedbackResponse } from "@/types/api";
 import { InteractionType } from "@/types/enums";
 
-// Direct API call to Cloud Run backend (CORS enabled)
-const API_URL = "https://knytt-api-prod-kouzugqpra-uc.a.run.app";
+// Use environment variable for API URL (defaults to production if not set)
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://knytt-api-prod-kouzugqpra-uc.a.run.app";
 
 /**
  * Hook to track user interactions with products
@@ -37,22 +37,26 @@ export function useTrackInteraction() {
     },
     onSuccess: (data) => {
       // Invalidate relevant queries
+      // Invalidate feed after a delay to allow Celery task to complete
       if (data.embeddings_updated) {
-        queryClient.invalidateQueries({
-          queryKey: ["recommendations", "feed", data.user_id],
-        });
+        // Wait 3 seconds for embedding update to complete, then invalidate
+        setTimeout(() => {
+          queryClient.invalidateQueries({
+            queryKey: ["recommendations", "feed", data.user_id],
+          });
+        }, 3000);
       }
 
       // Invalidate favorites if it's a like/unlike interaction
       if (data.interaction_type === "like" || data.interaction_type === "unlike") {
         queryClient.invalidateQueries({
-          queryKey: ["user", "favorites", data.user_id],
+          queryKey: ["user", "favorites", "me"],
         });
       }
 
       // Invalidate history
       queryClient.invalidateQueries({
-        queryKey: ["user", "history", data.user_id],
+        queryKey: ["user", "history", "me"],
       });
     },
   });

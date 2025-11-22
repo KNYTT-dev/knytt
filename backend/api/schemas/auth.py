@@ -74,6 +74,11 @@ class UserResponse(BaseModel):
     total_interactions: int = Field(default=0, description="Total number of interactions")
     onboarded: bool = Field(default=False, description="Whether user has completed onboarding")
 
+    # User preferences
+    preferred_categories: Optional[list] = Field(default=None, description="Preferred category IDs")
+    price_band_min: Optional[float] = Field(default=None, description="Minimum price preference")
+    price_band_max: Optional[float] = Field(default=None, description="Maximum price preference")
+
     model_config = {"from_attributes": True}  # Allow ORM model conversion
 
 

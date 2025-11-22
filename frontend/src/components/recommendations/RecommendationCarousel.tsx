@@ -10,7 +10,7 @@ import Link from "next/link";
 
 interface CarouselCardProps {
   product: ProductResult;
-  userId?: number;
+  userId?: string; // UUID string
   context: string;
   onLike: (productId: string, e: React.MouseEvent) => void;
   onAddToCart: (productId: string, e: React.MouseEvent) => void;
@@ -72,27 +72,16 @@ function CarouselCard({ product, userId, context, onLike, onAddToCart, onClick }
               <button
                 onClick={(e) => onAddToCart(product.product_id, e)}
                 className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
-                disabled={!product.in_stock}
+                // disabled={!product.in_stock} // TEMPORARY: Disabled until data re-ingestion
                 aria-label="Add to cart"
               >
-                <ShoppingCart
-                  className={`w-4 h-4 ${
-                    product.in_stock ? "text-sage" : "text-gray-400"
-                  }`}
-                />
+                <ShoppingCart className="w-4 h-4 text-sage" />
+                {/* TEMPORARY: Stock-based styling disabled */}
+                {/* <ShoppingCart className={`w-4 h-4 ${product.in_stock ? "text-sage" : "text-gray-400"}`} /> */}
               </button>
             </div>
           </div>
         </div>
-
-        {/* Stock Badge */}
-        {!product.in_stock && (
-          <div className="absolute top-3 left-3">
-            <span className="px-2 py-1 text-xs font-semibold bg-red-500 text-white rounded-full">
-              Out of Stock
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Product Info */}
@@ -116,7 +105,7 @@ function CarouselCard({ product, userId, context, onLike, onAddToCart, onClick }
 interface RecommendationCarouselProps {
   title: string;
   products: ProductResult[];
-  userId?: number;
+  userId?: string;
   context?: string;
   isLoading?: boolean;
 }
@@ -169,7 +158,7 @@ export function RecommendationCarousel({
     e.stopPropagation();
     if (!userId) return;
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.LIKE,
       context,
@@ -181,7 +170,7 @@ export function RecommendationCarousel({
     e.stopPropagation();
     if (!userId) return;
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.ADD_TO_CART,
       context,
@@ -191,7 +180,7 @@ export function RecommendationCarousel({
   const handleClick = (productId: string) => {
     if (!userId) return;
     feedbackMutation.mutate({
-      user_id: String(userId),
+      user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.CLICK,
       context,

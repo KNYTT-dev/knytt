@@ -193,7 +193,10 @@ async def recommend(
     elif request.context == RecommendationContext.SEARCH:
         # Search-based: blend query + user embeddings
         if not request.search_query:
-            raise SearchError(message="search_query required for context=search", status_code=400)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="search_query required for context=search",
+            )
 
         try:
             query_embedding = text_encoder.encode_query(request.search_query)
@@ -215,16 +218,18 @@ async def recommend(
     elif request.context == RecommendationContext.SIMILAR:
         # Similar products: get product embedding + blend with user
         if not request.product_id:
-            raise SearchError(message="product_id required for context=similar", status_code=400)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="product_id required for context=similar",
+            )
 
         # Get product embedding from cache or database
         product_embedding = _get_product_embedding(request.product_id, search_service, cache, db)
 
         if product_embedding is None:
-            raise SearchError(
-                message="Product not found",
-                details={"product_id": request.product_id},
-                status_code=404,
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Product not found or has no embedding: {request.product_id}",
             )
 
         # Blend product with user profile
@@ -238,7 +243,10 @@ async def recommend(
     elif request.context == RecommendationContext.CATEGORY:
         # Category-based: use long-term profile with category filter
         if not request.category_id:
-            raise SearchError(message="category_id required for context=category", status_code=400)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="category_id required for context=category",
+            )
 
         query_vector = long_term_embedding if has_long_term_profile else session_embedding
         blend_weights = {"long_term": 1.0} if has_long_term_profile else {"session": 1.0}
@@ -447,7 +455,7 @@ def _get_product_embedding(
         try:
             from sqlalchemy import select
 
-            from ...db.models import Product
+            from ...db.models import ProductEmbedding
 
             # Convert product_id to UUID
             try:
@@ -456,21 +464,30 @@ def _get_product_embedding(
                 logger.error(f"Invalid product UUID: {product_id}")
                 return None
 
-            # Query product
-            product = db.execute(
-                select(Product).where(Product.id == product_uuid)
+            # Query product embedding from product_embeddings table
+            product_embedding = db.execute(
+                select(ProductEmbedding).where(
+                    ProductEmbedding.product_id == product_uuid,
+                    ProductEmbedding.embedding_type == "text",
+                )
             ).scalar_one_or_none()
 
-            if product is None:
-                logger.warning(f"Product not found: {product_id}")
+            if product_embedding is None:
+                logger.warning(f"Product has no text embedding: {product_id}")
                 return None
 
-            # Get text embedding (default for similarity)
-            if product.text_embedding is not None:
-                if isinstance(product.text_embedding, (list, tuple)):
-                    embedding = np.array(product.text_embedding, dtype=np.float32)
-                else:
-                    embedding = np.array(product.text_embedding, dtype=np.float32)
+            # Get embedding vector (check both pgvector and legacy array formats)
+            if product_embedding.embedding_vector is not None:
+                # pgvector format, convert to numpy array
+                embedding = np.array(product_embedding.embedding_vector, dtype=np.float32)
+            elif product_embedding.embedding is not None:
+                # Legacy array format
+                embedding = np.array(product_embedding.embedding, dtype=np.float32)
+            else:
+                logger.warning(f"Product embedding has no vector data: {product_id}")
+                return None
+
+            if embedding is not None:
 
                 # Cache for future use
                 try:

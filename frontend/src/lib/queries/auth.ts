@@ -15,6 +15,10 @@ interface User {
   last_login?: string;
   total_interactions?: number;
   onboarded: boolean;
+  // User preferences
+  preferred_categories?: string[];
+  price_band_min?: number;
+  price_band_max?: number;
 }
 
 interface RegisterRequest {

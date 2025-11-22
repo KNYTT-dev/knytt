@@ -3,6 +3,14 @@ FastAPI Main Application
 Entry point for the GreenThumb ML API.
 """
 
+# CRITICAL: Set PyTorch environment variables BEFORE any imports
+# This fixes CLIP model loading hang on Apple Silicon (macOS)
+# These variables must be set before torch is imported anywhere in the codebase
+import os
+
+os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "0")
+os.environ.setdefault("ML_DEVICE", "cpu")
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -47,19 +55,26 @@ async def lifespan(app: FastAPI):
 
     settings = get_settings()
 
-    # Pre-load CLIP model to avoid cold start delays on first search
-    try:
-        from ..ml.model_loader import model_registry
+    # Pre-load CLIP model if PRELOAD_CLIP_MODEL environment variable is set
+    # This is useful for local development to avoid blocking requests during first model load
+    # In production (Cloud Run), concurrent request handling makes this unnecessary
+    preload_clip = os.getenv("PRELOAD_CLIP_MODEL", "").lower() in ("true", "1", "yes")
 
-        logger.info("Pre-loading CLIP model for faster search performance...")
-        model_registry.get_clip_model()
-        logger.info("CLIP model pre-loaded successfully")
-    except Exception as e:
-        logger.warning(f"Failed to pre-load CLIP model (will load on-demand): {e}")
+    if preload_clip:
+        try:
+            from ..ml.model_loader import model_registry
 
-    # FAISS index will be loaded lazily on first search request
-    # This prevents memory issues during startup and allows the app to start quickly
-    logger.info("GreenThumb ML API started successfully (FAISS index will load on-demand)")
+            logger.info("Pre-loading CLIP model for faster search performance...")
+            model_registry.get_clip_model()
+            logger.info("CLIP model pre-loaded successfully")
+        except Exception as e:
+            logger.warning(f"Failed to pre-load CLIP model (will load on-demand): {e}")
+
+        logger.info("GreenThumb ML API started successfully (CLIP model pre-loaded)")
+    else:
+        # FAISS index and CLIP model will be loaded lazily on first search request
+        # This prevents memory issues during startup and allows the app to start quickly
+        logger.info("GreenThumb ML API started successfully (FAISS index will load on-demand)")
 
     yield
 
