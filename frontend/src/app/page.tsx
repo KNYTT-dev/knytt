@@ -1,6 +1,9 @@
 "use client";
 
-import { HeroSection, CategoryPills, MasonryGrid } from "@/components/home";
+import { MasonryGrid } from "@/components/home";
+import { EnhancedHeroSection } from "@/components/home/EnhancedHeroSection";
+import { SignupCTA } from "@/components/home/SignupCTA";
+import { FeaturesZigZag } from "@/components/home/FeaturesZigZag";
 import { RecommendationCarousel } from "@/components/recommendations/RecommendationCarousel";
 import { useDiscover } from "@/lib/queries/discover";
 import { useFeed } from "@/lib/queries/recommendations";
@@ -15,7 +18,7 @@ export default function HomePage() {
   // Fetch personalized recommendations for authenticated users
   const { data: recommendedData, isLoading: recommendationsLoading, error: recommendationsError } = useFeed(userId);
 
-  // Fetch featured products using discover endpoint (no ML dependencies)
+  // Fetch featured products using discover endpoint - available to everyone
   const { data, isLoading } = useDiscover(
     {
       sort_by: "popular",
@@ -28,11 +31,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <HeroSection />
-
-      {/* Category Navigation */}
-      <CategoryPills />
+      {/* Enhanced Hero Section with Animated Background */}
+      <EnhancedHeroSection />
 
       {/* Personalized Recommendations (Authenticated Users Only) */}
       {isAuthenticated && !recommendationsError && (
@@ -74,18 +74,8 @@ export default function HomePage() {
       )}
 
       {/* Main Content */}
-      <section className="py-12 bg-ivory">
+      <section id="products-section" className="py-12 bg-ivory">
         <div className="container mx-auto px-4">
-          {/* Section Header */}
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-charcoal mb-2">
-              Discover Products
-            </h2>
-            <p className="text-gray">
-              Explore curated collections powered by AI
-            </p>
-          </div>
-
           {/* Loading State */}
           {isLoading && (
             <div className="flex items-center justify-center py-20">
@@ -112,21 +102,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-20 bg-gradient-to-br from-pinterest-red to-dark-red">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-white mb-4">
-            Ready to Find Your Style?
-          </h2>
-          <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-            Join thousands of users discovering products they love with our
-            AI-powered recommendations.
-          </p>
-          <button className="px-8 py-4 bg-white text-pinterest-red rounded-full font-semibold text-lg hover:bg-light-gray transition-colors shadow-xl active:scale-95">
-            Get Started
-          </button>
-        </div>
-      </section>
+      {/* Feature Highlights */}
+      <FeaturesZigZag />
+
+      {/* Signup CTA (Non-Authenticated Users Only) */}
+      {!isAuthenticated && <SignupCTA />}
     </div>
   );
 }
