@@ -3,25 +3,43 @@
 import { useState } from "react";
 import { Heart, ShoppingCart, Check } from "lucide-react";
 import { useTrackInteraction } from "@/lib/queries/feedback";
+import { useCartStore } from "@/lib/stores/cartStore";
+import { useToast } from "@/components/ui/Toast";
 import { InteractionType } from "@/types/enums";
 
 interface ProductActionsProps {
   productId: string;
   userId?: string;
   inStock: boolean;
+  productTitle: string;
+  productPrice: number;
+  productCurrency: string;
+  productImage?: string;
+  productUrl?: string;
 }
 
 export function ProductActions({
   productId,
   userId,
   inStock,
+  productTitle,
+  productPrice,
+  productCurrency,
+  productImage,
+  productUrl,
 }: ProductActionsProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const feedbackMutation = useTrackInteraction();
+  const addToCart = useCartStore((state) => state.addItem);
+  const toast = useToast();
 
   const handleLike = () => {
-    if (!userId) return; // Skip if not authenticated
+    if (!userId) {
+      toast.warning("Please login to like products");
+      return;
+    }
+
     setIsLiked(!isLiked);
     feedbackMutation.mutate({
       user_id: userId,
@@ -31,17 +49,38 @@ export function ProductActions({
   };
 
   const handleAddToCart = () => {
-    if (!inStock) return;
-    if (!userId) return; // Skip if not authenticated
+    if (!inStock) {
+      toast.error("This product is out of stock");
+      return;
+    }
 
+    if (!userId) {
+      toast.warning("Please login to add to cart");
+      return;
+    }
+
+    // Add to cart store
+    addToCart({
+      productId: productId,
+      title: productTitle,
+      price: productPrice,
+      currency: productCurrency,
+      imageUrl: productImage,
+      productUrl: productUrl,
+    });
+
+    // Show success feedback
     setIsAddedToCart(true);
+    toast.success("Added to cart", productTitle);
+
+    // Track interaction in background
     feedbackMutation.mutate({
       user_id: userId,
       product_id: productId,
       interaction_type: InteractionType.ADD_TO_CART,
     });
 
-    // Reset after 3 seconds
+    // Reset button state after 3 seconds
     setTimeout(() => {
       setIsAddedToCart(false);
     }, 3000);
