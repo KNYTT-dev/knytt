@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, ShoppingCart, Check } from "lucide-react";
 import { useTrackInteraction } from "@/lib/queries/feedback";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useToast } from "@/components/ui/Toast";
+import { useFavorites } from "@/lib/queries/user";
 import { InteractionType } from "@/types/enums";
 
 interface ProductActionsProps {
@@ -34,6 +35,19 @@ export function ProductActions({
   const addToCart = useCartStore((state) => state.addItem);
   const toast = useToast();
 
+  // Fetch user's favorites to check if this product is already favorited
+  const { data: favorites } = useFavorites(userId);
+
+  // Update isLiked when favorites data loads
+  useEffect(() => {
+    if (favorites?.favorites && productId) {
+      const isFavorited = favorites.favorites.some(
+        (fav) => fav.product_id === productId
+      );
+      setIsLiked(isFavorited);
+    }
+  }, [favorites, productId]);
+
   const handleLike = () => {
     if (!userId) {
       toast.warning("Please login to like products");
@@ -49,10 +63,12 @@ export function ProductActions({
   };
 
   const handleAddToCart = () => {
-    if (!inStock) {
-      toast.error("This product is out of stock");
-      return;
-    }
+    // TEMPORARY: Stock check disabled until data re-ingestion
+    // TODO: Re-enable after re-ingesting product data with new stock validation
+    // if (!inStock) {
+    //   toast.error("This product is out of stock");
+    //   return;
+    // }
 
     if (!userId) {
       toast.warning("Please login to add to cart");
@@ -89,13 +105,12 @@ export function ProductActions({
   return (
     <div className="space-y-3">
       {/* Add to Cart Button */}
+      {/* TEMPORARY: Stock-based UI disabled until data re-ingestion */}
       <button
         onClick={handleAddToCart}
-        disabled={!inStock}
+        // disabled={!inStock} // TEMPORARY: Disabled until data re-ingestion
         className={`w-full px-6 py-4 rounded-full font-semibold text-lg transition-all shadow-lg ${
-          !inStock
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : isAddedToCart
+          isAddedToCart
             ? "bg-green-600 text-white"
             : "bg-gradient-to-r from-sage to-evergreen text-white hover:shadow-xl hover:scale-105"
         }`}
@@ -109,7 +124,7 @@ export function ProductActions({
           ) : (
             <>
               <ShoppingCart className="w-6 h-6" />
-              <span>{inStock ? "Add to Cart" : "Out of Stock"}</span>
+              <span>Add to Cart</span>
             </>
           )}
         </span>
