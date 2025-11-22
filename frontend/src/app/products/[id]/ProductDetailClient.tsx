@@ -185,6 +185,11 @@ export default function ProductDetailClient({
                 productId={product.product_id}
                 userId={userId}
                 inStock={product.in_stock}
+                productTitle={product.title}
+                productPrice={product.price || 0}
+                productCurrency={product.currency || "$"}
+                productImage={product.image_url}
+                productUrl={product.product_url}
               />
             </div>
           </div>
