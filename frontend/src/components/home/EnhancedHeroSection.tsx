@@ -1,7 +1,7 @@
 'use client';
 
 import { Sparkles, ArrowDown } from 'lucide-react';
-import AnimatedMasonryBackground from '../landing/AnimatedMasonryBackground';
+import AnimatedProductCardsBackground from './AnimatedProductCardsBackground';
 
 export function EnhancedHeroSection() {
   const scrollToProducts = () => {
@@ -13,8 +13,8 @@ export function EnhancedHeroSection() {
 
   return (
     <section className="relative h-[70vh] min-h-[600px] max-h-[800px] flex items-center justify-center overflow-hidden">
-      {/* Animated Masonry Background */}
-      <AnimatedMasonryBackground />
+      {/* Animated Product Cards Background */}
+      <AnimatedProductCardsBackground />
 
       {/* Hero Content */}
       <div className="relative z-10 container mx-auto px-4 py-20">
