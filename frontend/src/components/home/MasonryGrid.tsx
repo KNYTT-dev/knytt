@@ -143,11 +143,11 @@ export function MasonryGrid({ products, userId, showHero = false, heroColumnInde
   const heroCol = showHero ? getHeroColumn() : -1;
 
   // Distribute products into columns
-  const columnProducts: (ProductResult[] | 'HERO')[][] = Array.from({ length: columns }, () => []);
+  const columnProducts: (ProductResult | 'HERO')[][] = Array.from({ length: columns }, () => []);
   
   // Insert hero as first item in the designated column
   if (showHero && heroCol >= 0 && heroCol < columns) {
-    columnProducts[heroCol].push('HERO' as any);
+    columnProducts[heroCol].push('HERO');
   }
   
   // Distribute products into columns
