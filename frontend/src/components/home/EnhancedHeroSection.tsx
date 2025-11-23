@@ -28,14 +28,31 @@ export function EnhancedHeroSection() {
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-5xl md:text-7xl font-bold leading-tight text-white drop-shadow-2xl">
+          <h1
+            className="text-5xl md:text-7xl font-bold leading-tight text-white"
+            style={{
+              textShadow: '0 4px 6px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.4)'
+            }}
+          >
             One feed. Every brand.
             <br />
-            <span className="text-[#8a94ff] drop-shadow-2xl">Your vibe.</span>
+            <span
+              className="text-[#8a94ff]"
+              style={{
+                textShadow: '0 4px 6px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.7), 0 8px 16px rgba(0, 0, 0, 0.5)'
+              }}
+            >
+              Your vibe.
+            </span>
           </h1>
 
           {/* Subheading */}
-          <p className="text-lg md:text-xl text-white/95 max-w-2xl mx-auto drop-shadow-lg">
+          <p
+            className="text-lg md:text-xl text-white max-w-2xl mx-auto font-medium"
+            style={{
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.8), 0 4px 8px rgba(0, 0, 0, 0.6)'
+            }}
+          >
             Discover products you'll love from thousands of brands, all in one place.
           </p>
 
