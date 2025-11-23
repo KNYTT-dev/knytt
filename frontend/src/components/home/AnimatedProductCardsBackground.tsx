@@ -26,11 +26,11 @@ export default function AnimatedProductCardsBackground() {
 
   // Fetch products
   useEffect(() => {
-    fetch('/api/discover?limit=50')
+    fetch('/api/v1/discover?limit=50')
       .then((res) => res.json())
       .then((data) => {
-        if (data.products) {
-          setProducts(data.products);
+        if (data.results) {
+          setProducts(data.results);
           // Initialize columns with products
           const initialColumns = Array(COLUMNS)
             .fill(null)
@@ -38,8 +38,8 @@ export default function AnimatedProductCardsBackground() {
               return Array(ITEMS_PER_COLUMN)
                 .fill(null)
                 .map((_, itemIndex) => {
-                  const productIndex = (colIndex * ITEMS_PER_COLUMN + itemIndex) % data.products.length;
-                  return data.products[productIndex];
+                  const productIndex = (colIndex * ITEMS_PER_COLUMN + itemIndex) % data.results.length;
+                  return data.results[productIndex];
                 })
                 .filter(Boolean);
             });

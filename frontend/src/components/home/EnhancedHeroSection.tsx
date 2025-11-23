@@ -31,7 +31,7 @@ export function EnhancedHeroSection() {
           <h1
             className="text-5xl md:text-7xl font-bold leading-tight text-white"
             style={{
-              textShadow: '0 4px 6px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.4)'
+              textShadow: '0 4px 6px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.2)'
             }}
           >
             One feed. Every brand.
@@ -39,7 +39,7 @@ export function EnhancedHeroSection() {
             <span
               className="text-[#8a94ff]"
               style={{
-                textShadow: '0 4px 6px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.7), 0 8px 16px rgba(0, 0, 0, 0.5)'
+                textShadow: '0 4px 6px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3)'
               }}
             >
               Your vibe.
@@ -50,7 +50,7 @@ export function EnhancedHeroSection() {
           <p
             className="text-lg md:text-xl text-white max-w-2xl mx-auto font-medium"
             style={{
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.8), 0 4px 8px rgba(0, 0, 0, 0.6)'
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3)'
             }}
           >
             Discover products you'll love from thousands of brands, all in one place.

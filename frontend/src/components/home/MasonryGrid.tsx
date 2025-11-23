@@ -7,6 +7,7 @@ import { Heart, ShoppingCart } from "lucide-react";
 import { useTrackInteraction } from "@/lib/queries/feedback";
 import { InteractionType } from "@/types/enums";
 import Link from "next/link";
+import { IntegratedHero } from "./IntegratedHero";
 
 interface MasonryCardProps {
   product: ProductResult;
@@ -107,9 +108,12 @@ function MasonryCard({ product, userId, onLike, onAddToCart, onClick }: MasonryC
 interface MasonryGridProps {
   products: ProductResult[];
   userId?: string;
+  showHero?: boolean;
+  heroColumnIndex?: number;
+  onScrollToProducts?: () => void;
 }
 
-export function MasonryGrid({ products, userId }: MasonryGridProps) {
+export function MasonryGrid({ products, userId, showHero = false, heroColumnIndex, onScrollToProducts }: MasonryGridProps) {
   const [columns, setColumns] = useState(4);
   const feedbackMutation = useTrackInteraction();
 
@@ -129,8 +133,24 @@ export function MasonryGrid({ products, userId }: MasonryGridProps) {
   // Filter out products without valid images (safety net)
   const validProducts = products.filter(p => p.image_url?.trim());
 
+  // Calculate hero column position (default to center column)
+  const getHeroColumn = () => {
+    if (heroColumnIndex !== undefined) return heroColumnIndex;
+    // Place hero in center column
+    return Math.floor(columns / 2);
+  };
+
+  const heroCol = showHero ? getHeroColumn() : -1;
+
   // Distribute products into columns
-  const columnProducts: ProductResult[][] = Array.from({ length: columns }, () => []);
+  const columnProducts: (ProductResult[] | 'HERO')[][] = Array.from({ length: columns }, () => []);
+  
+  // Insert hero as first item in the designated column
+  if (showHero && heroCol >= 0 && heroCol < columns) {
+    columnProducts[heroCol].push('HERO' as any);
+  }
+  
+  // Distribute products into columns
   validProducts.forEach((product, index) => {
     columnProducts[index % columns].push(product);
   });
@@ -170,16 +190,30 @@ export function MasonryGrid({ products, userId }: MasonryGridProps) {
     <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
       {columnProducts.map((column, columnIndex) => (
         <div key={columnIndex} className="flex flex-col gap-4">
-          {column.map((product) => (
-            <MasonryCard
-              key={product.product_id}
-              product={product}
-              userId={userId}
-              onLike={handleLike}
-              onAddToCart={handleAddToCart}
-              onClick={handleClick}
-            />
-          ))}
+          {column.map((item, itemIndex) => {
+            // Render hero if this is the hero placeholder
+            if (item === 'HERO') {
+              return (
+                <IntegratedHero
+                  key="hero"
+                  onScrollToProducts={onScrollToProducts}
+                />
+              );
+            }
+            
+            // Render product card
+            const product = item as ProductResult;
+            return (
+              <MasonryCard
+                key={product.product_id}
+                product={product}
+                userId={userId}
+                onLike={handleLike}
+                onAddToCart={handleAddToCart}
+                onClick={handleClick}
+              />
+            );
+          })}
         </div>
       ))}
     </div>

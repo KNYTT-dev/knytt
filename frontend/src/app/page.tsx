@@ -1,9 +1,7 @@
 "use client";
 
-import { MasonryGrid } from "@/components/home";
-import { EnhancedHeroSection } from "@/components/home/EnhancedHeroSection";
+import { MasonryGrid, HowItWorks } from "@/components/home";
 import { SignupCTA } from "@/components/home/SignupCTA";
-import { FeaturesZigZag } from "@/components/home/FeaturesZigZag";
 import { RecommendationCarousel } from "@/components/recommendations/RecommendationCarousel";
 import { useDiscover } from "@/lib/queries/discover";
 import { useFeed } from "@/lib/queries/recommendations";
@@ -29,14 +27,50 @@ export default function HomePage() {
     }
   );
 
+  const scrollToProducts = () => {
+    // Since hero is now in the grid, just scroll to a bit below the hero
+    window.scrollTo({ behavior: 'smooth', top: window.innerHeight * 0.6 });
+  };
+
   return (
-    <div className="min-h-screen">
-      {/* Enhanced Hero Section with Animated Background */}
-      <EnhancedHeroSection />
+    <div className="min-h-screen bg-ivory">
+      {/* Main Content with Integrated Hero */}
+      <section id="products-section" className="pt-6 pb-12">
+        <div className="container mx-auto px-4">
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 text-pinterest-red animate-spin mx-auto mb-4" />
+                <p className="text-gray">Loading products...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Products Masonry Grid with Integrated Hero */}
+          {data && data.results.length > 0 && (
+            <MasonryGrid
+              products={data.results}
+              userId={userId}
+              showHero={true}
+              onScrollToProducts={scrollToProducts}
+            />
+          )}
+
+          {/* Empty State */}
+          {data && data.results.length === 0 && (
+            <div className="text-center py-20">
+              <p className="text-gray text-lg">
+                No products available yet. Check back soon!
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Personalized Recommendations (Authenticated Users Only) */}
       {isAuthenticated && !recommendationsError && (
-        <section className="py-8 bg-gradient-to-b from-white to-ivory">
+        <section className="py-12 bg-white border-t border-light-gray">
           <div className="container mx-auto px-4">
             {recommendationsLoading ? (
               <div className="flex items-center justify-center py-10">
@@ -73,40 +107,11 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Main Content */}
-      <section id="products-section" className="py-12 bg-ivory">
-        <div className="container mx-auto px-4">
-          {/* Loading State */}
-          {isLoading && (
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center">
-                <Loader2 className="w-12 h-12 text-pinterest-red animate-spin mx-auto mb-4" />
-                <p className="text-gray">Loading products...</p>
-              </div>
-            </div>
-          )}
-
-          {/* Products Masonry Grid */}
-          {data && data.results.length > 0 && (
-            <MasonryGrid products={data.results} userId={userId} />
-          )}
-
-          {/* Empty State */}
-          {data && data.results.length === 0 && (
-            <div className="text-center py-20">
-              <p className="text-gray text-lg">
-                No products available yet. Check back soon!
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Feature Highlights */}
-      <FeaturesZigZag />
-
       {/* Signup CTA (Non-Authenticated Users Only) */}
       {!isAuthenticated && <SignupCTA />}
+
+      {/* How It Works Section */}
+      <HowItWorks />
     </div>
   );
 }
