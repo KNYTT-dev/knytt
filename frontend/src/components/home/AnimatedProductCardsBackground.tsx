@@ -8,18 +8,19 @@ interface Product {
   id: string;
   image_url: string;
   title: string;
-  brand?: string;
-  price: number;
-  currency: string;
 }
 
-const GRID_SIZE = 12; // 3x4 grid on desktop
-const ROTATION_INTERVAL = 4000; // 4 seconds per card rotation
+// Create columns for masonry layout
+const COLUMNS = 6; // 6 columns for full coverage
+const ITEMS_PER_COLUMN = 4; // 4 items per column
+const ROTATION_INTERVAL = 3000; // 3 seconds per image rotation
 
 export default function AnimatedProductCardsBackground() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [displayedProducts, setDisplayedProducts] = useState<(Product | null)[]>(
-    Array(GRID_SIZE).fill(null)
+  const [columns, setColumns] = useState<Product[][]>(
+    Array(COLUMNS)
+      .fill(null)
+      .map(() => [])
   );
   const [isPaused, setIsPaused] = useState(false);
 
@@ -30,33 +31,50 @@ export default function AnimatedProductCardsBackground() {
       .then((data) => {
         if (data.products) {
           setProducts(data.products);
-          // Initialize grid with first products
-          setDisplayedProducts(
-            data.products.slice(0, GRID_SIZE).concat(Array(GRID_SIZE).fill(null)).slice(0, GRID_SIZE)
-          );
+          // Initialize columns with products
+          const initialColumns = Array(COLUMNS)
+            .fill(null)
+            .map((_, colIndex) => {
+              return Array(ITEMS_PER_COLUMN)
+                .fill(null)
+                .map((_, itemIndex) => {
+                  const productIndex = (colIndex * ITEMS_PER_COLUMN + itemIndex) % data.products.length;
+                  return data.products[productIndex];
+                })
+                .filter(Boolean);
+            });
+          setColumns(initialColumns);
         }
       })
       .catch((err) => console.error('Failed to fetch products:', err));
   }, []);
 
-  // Rotate products randomly
+  // Rotate images randomly
   useEffect(() => {
     if (isPaused || products.length === 0) return;
 
     const interval = setInterval(() => {
-      setDisplayedProducts((current) => {
-        const newDisplayed = [...current];
-        // Pick a random card position to update
-        const randomIndex = Math.floor(Math.random() * GRID_SIZE);
+      setColumns((currentColumns) => {
+        const newColumns = currentColumns.map((column) => [...column]);
+        // Pick a random column and position
+        const randomCol = Math.floor(Math.random() * COLUMNS);
+        const randomRow = Math.floor(Math.random() * ITEMS_PER_COLUMN);
         // Pick a random product
         const randomProduct = products[Math.floor(Math.random() * products.length)];
-        newDisplayed[randomIndex] = randomProduct;
-        return newDisplayed;
+
+        if (newColumns[randomCol] && newColumns[randomCol][randomRow]) {
+          newColumns[randomCol][randomRow] = randomProduct;
+        }
+
+        return newColumns;
       });
-    }, ROTATION_INTERVAL / GRID_SIZE); // Stagger updates
+    }, ROTATION_INTERVAL / (COLUMNS * 2)); // Stagger updates across all images
 
     return () => clearInterval(interval);
   }, [products, isPaused]);
+
+  // Varying heights for masonry effect
+  const heights = ['250px', '300px', '350px', '280px', '320px', '270px'];
 
   return (
     <div className="absolute inset-0 overflow-hidden">
@@ -69,55 +87,58 @@ export default function AnimatedProductCardsBackground() {
         {isPaused ? 'Resume' : 'Pause'}
       </button>
 
-      {/* Product cards grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 p-4 h-full">
-        {displayedProducts.map((product, index) => (
-          <div key={index} className="relative aspect-[3/4]">
-            <AnimatePresence mode="wait">
-              {product && (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.5 }}
-                  className="absolute inset-0 bg-white rounded-xl overflow-hidden shadow-lg"
-                >
-                  {/* Product Image */}
-                  <div className="relative w-full h-3/4">
+      {/* Masonry columns - no gaps, full coverage */}
+      <div className="flex w-full h-[150%] -mt-[25%]">
+        {columns.map((column, colIndex) => (
+          <motion.div
+            key={colIndex}
+            className="flex-1 flex flex-col"
+            animate={{
+              y: isPaused ? 0 : [-200, 0],
+            }}
+            transition={{
+              duration: 20 + colIndex * 3,
+              repeat: Infinity,
+              ease: 'linear',
+              delay: colIndex * 1.5,
+            }}
+          >
+            {/* Duplicate for seamless loop */}
+            {[...column, ...column].map((product, idx) => (
+              <div
+                key={`${product.id}-${idx}`}
+                className="relative flex-shrink-0"
+                style={{
+                  height: heights[idx % heights.length],
+                }}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="absolute inset-0"
+                  >
                     <Image
                       src={product.image_url}
                       alt={product.title}
                       fill
                       className="object-cover"
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      sizes="17vw"
+                      loading="lazy"
                     />
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="p-3 h-1/4 flex flex-col justify-center">
-                    {product.brand && (
-                      <p className="text-xs font-semibold text-gray-600 uppercase truncate">
-                        {product.brand}
-                      </p>
-                    )}
-                    <p className="text-sm font-medium text-gray-900 truncate line-clamp-1">
-                      {product.title}
-                    </p>
-                    <p className="text-sm font-bold text-[#8a94ff]">
-                      {product.currency}
-                      {product.price.toFixed(2)}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            ))}
+          </motion.div>
         ))}
       </div>
 
-      {/* Dark overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
+      {/* Strong dark overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/80" />
     </div>
   );
 }
