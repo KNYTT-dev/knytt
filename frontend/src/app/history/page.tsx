@@ -141,7 +141,7 @@ export default function HistoryPage() {
               Start exploring products to see your activity here
             </p>
             <Link
-              href="/"
+              href="/discover"
               className="inline-block px-6 py-3 bg-terracotta text-white rounded-full hover:bg-terracotta/90 transition-colors"
             >
               Discover Products

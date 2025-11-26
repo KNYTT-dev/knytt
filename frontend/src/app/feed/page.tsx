@@ -163,7 +163,7 @@ export default function FeedPage() {
               Start exploring products to get personalized recommendations
             </p>
             <Link
-              href="/"
+              href="/discover"
               className="inline-block px-6 py-3 bg-terracotta text-white rounded-full hover:bg-terracotta/90 transition-colors"
             >
               Discover Products
@@ -187,7 +187,7 @@ export default function FeedPage() {
               Update Preferences
             </Link>
             <Link
-              href="/"
+              href="/discover"
               className="px-6 py-3 bg-evergreen text-white rounded-full hover:bg-sage transition-colors"
             >
               Explore More

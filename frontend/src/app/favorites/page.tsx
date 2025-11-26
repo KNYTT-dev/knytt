@@ -158,7 +158,7 @@ export default function FavoritesPage() {
               Start adding products to your favorites by clicking the heart icon
             </p>
             <Link
-              href="/"
+              href="/discover"
               className="inline-block px-6 py-3 bg-terracotta text-white rounded-full hover:bg-terracotta/90 transition-colors"
             >
               Discover Products

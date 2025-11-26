@@ -109,7 +109,7 @@ export function Header() {
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6">
             <Link
-              href="/"
+              href="/discover"
               className="text-charcoal hover:text-pinterest-red transition-colors font-medium"
             >
               Discover
@@ -277,7 +277,7 @@ export function Header() {
           >
             <nav className="flex flex-col p-6 space-y-2">
               <Link
-                href="/"
+                href="/discover"
                 onClick={() => setShowMobileMenu(false)}
                 className="px-4 py-3 text-lg font-medium text-charcoal hover:bg-light-gray rounded-lg transition-all active:scale-95"
               >

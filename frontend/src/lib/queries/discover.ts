@@ -3,7 +3,7 @@
  * Simple product discovery without ML dependencies
  */
 
-import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, UseQueryOptions, UseInfiniteQueryOptions } from "@tanstack/react-query";
 import { SearchResponse } from "@/types/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -61,6 +61,56 @@ export function useDiscover(
       }
 
       return response.json();
+    },
+    ...options,
+  });
+}
+
+/**
+ * Hook for infinite scroll discover (browse all products)
+ */
+export function useInfiniteDiscover(
+  params: Omit<DiscoverParams, 'offset'> = {},
+  options?: Omit<
+    UseInfiniteQueryOptions<SearchResponse, Error, any, any, number>,
+    "queryKey" | "queryFn" | "initialPageParam" | "getNextPageParam"
+  >
+) {
+  return useInfiniteQuery<SearchResponse, Error, any, any, number>({
+    queryKey: ["discover", "infinite", params],
+    queryFn: async ({ pageParam }: { pageParam: number }): Promise<SearchResponse> => {
+      const searchParams = new URLSearchParams({
+        limit: (params.limit || 20).toString(),
+        offset: pageParam.toString(),
+        sort_by: params.sort_by || "popular",
+      });
+
+      if (params.min_price !== undefined) {
+        searchParams.append("min_price", params.min_price.toString());
+      }
+      if (params.max_price !== undefined) {
+        searchParams.append("max_price", params.max_price.toString());
+      }
+
+      const response = await fetch(
+        `${API_URL}/api/v1/discover?${searchParams.toString()}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Failed to discover products");
+      }
+
+      return response.json();
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const nextOffset = lastPage.offset + lastPage.limit;
+      return nextOffset < lastPage.total ? nextOffset : undefined;
     },
     ...options,
   });
