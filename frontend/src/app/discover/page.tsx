@@ -44,7 +44,7 @@ export default function DiscoverPage() {
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Flatten all pages into single array
-  const allProducts = data?.pages?.flatMap((page) => page.results) ?? [];
+  const allProducts = data?.pages?.flatMap((page: any) => page.results) ?? [];
   const totalResults = data?.pages?.[0]?.total ?? 0;
 
   // Price filter handlers
