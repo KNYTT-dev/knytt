@@ -128,7 +128,7 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
   return (
     <div
       onClick={handleCardClick}
-      className="group relative bg-white border-2 border-light-gray rounded-xl overflow-hidden hover:border-pinterest-red/30 transition-all duration-[var(--duration-slow)] cursor-pointer hover:shadow-xl shadow-md active:scale-[0.98]"
+      className="group relative bg-white border-2 border-light-gray rounded-xl overflow-visible hover:border-pinterest-red/30 transition-all duration-[var(--duration-slow)] cursor-pointer hover:shadow-xl shadow-md active:scale-[0.98]"
     >
       {/* Product Image */}
       <div className="relative aspect-square bg-light-gray/50 overflow-hidden">

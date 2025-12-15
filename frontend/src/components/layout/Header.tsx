@@ -156,7 +156,7 @@ export function Header() {
             </Link>
 
             {/* Favorites */}
-            <Tooltip content="Favorites">
+            <Tooltip content="Favorites" position="bottom">
               <Link
                 href="/favorites"
                 className="p-2.5 hover:bg-light-gray rounded-full transition-all duration-[var(--duration-fast)] group relative active:scale-95"
@@ -166,7 +166,7 @@ export function Header() {
             </Tooltip>
 
             {/* Cart */}
-            <Tooltip content="Shopping Cart">
+            <Tooltip content="Shopping Cart" position="bottom">
               <Link
                 href="/cart"
                 className="p-2.5 hover:bg-light-gray rounded-full transition-all duration-[var(--duration-fast)] group relative active:scale-95"
