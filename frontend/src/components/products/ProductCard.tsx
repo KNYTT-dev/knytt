@@ -210,7 +210,7 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
           </div>
         )}
 
-        {/* Price and Cart Button */}
+        {/* Price and Action Buttons */}
         <div className="flex items-center justify-between mt-4">
           <div className="flex flex-col">
             <span className="text-xl font-bold text-pinterest-red">
@@ -223,18 +223,37 @@ export function ProductCard({ product, userId, onProductClick }: ProductCardProp
             )}
           </div>
 
-          {/* TEMPORARY: Stock-based UI disabled until data re-ingestion */}
-          {/* TODO: Re-enable conditional rendering after re-ingesting product data */}
-          <Tooltip content="Add to cart">
-            <button
-              onClick={handleAddToCart}
-              // disabled={!product.in_stock}
-              className="p-3 rounded-full transition-all duration-[var(--duration-fast)] shadow-md hover:shadow-lg active:scale-95 bg-pinterest-red text-white hover:bg-dark-red"
-              aria-label="Add to cart"
-            >
-              <ShoppingCart className="h-5 w-5" />
-            </button>
-          </Tooltip>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            {/* Favorite Button */}
+            <Tooltip content={isLiked ? "Unlike" : "Like"}>
+              <button
+                onClick={handleLike}
+                className={`p-3 rounded-full transition-all duration-[var(--duration-fast)] shadow-md hover:shadow-lg active:scale-95 ${
+                  isLiked
+                    ? "bg-white text-pinterest-red"
+                    : "bg-white text-charcoal/70 hover:text-pinterest-red"
+                } ${justLiked ? "animate-heart-pop" : ""}`}
+                aria-label={isLiked ? "Unlike product" : "Like product"}
+              >
+                <Heart className={`h-5 w-5 transition-all ${isLiked ? "fill-current" : ""}`} />
+              </button>
+            </Tooltip>
+
+            {/* Cart Button */}
+            {/* TEMPORARY: Stock-based UI disabled until data re-ingestion */}
+            {/* TODO: Re-enable conditional rendering after re-ingesting product data */}
+            <Tooltip content="Add to cart">
+              <button
+                onClick={handleAddToCart}
+                // disabled={!product.in_stock}
+                className="p-3 rounded-full transition-all duration-[var(--duration-fast)] shadow-md hover:shadow-lg active:scale-95 bg-pinterest-red text-white hover:bg-dark-red"
+                aria-label="Add to cart"
+              >
+                <ShoppingCart className="h-5 w-5" />
+              </button>
+            </Tooltip>
+          </div>
         </div>
 
         {/* Relevance Score (for debugging/demo) */}
