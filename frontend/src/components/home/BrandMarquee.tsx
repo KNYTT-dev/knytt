@@ -2,42 +2,29 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import Image from 'next/image';
 
-const BRANDS = [
-  'Nike',
-  'Adidas',
-  'Puma',
-  'The North Face',
-  'Patagonia',
-  'Columbia',
-  'Timberland',
-  'Dr. Martens',
-  'Champion',
-  'Fila',
-  'New Balance',
-  'Reebok',
-  'Under Armour',
-  'Asics',
-  'Vans',
-  'Converse',
-  'Skechers',
-  "Levi's",
-  'Gap',
-  'Faherty',
-];
+// Single brand - Faherty
+const BRAND = {
+  name: 'Faherty',
+  logo: '/logos/brands/faherty.jpg',
+};
 
 export function BrandMarquee() {
   const [isPaused, setIsPaused] = useState(false);
 
+  // Repeat logo 10 times for seamless infinite scroll
+  const repeatedLogos = Array(10).fill(BRAND);
+
   return (
     <section
       className="relative bg-ivory py-12 overflow-hidden border-y border-light-gray"
-      aria-label="Partner brands"
+      aria-label="Featured brand partner"
     >
-      {/* Optional: Small heading above */}
+      {/* Heading */}
       <div className="text-center mb-8">
         <p className="text-sm uppercase tracking-wider text-gray/70 font-medium">
-          Partnered with Leading Brands
+          Featured Brand Partner
         </p>
       </div>
 
@@ -53,28 +40,31 @@ export function BrandMarquee() {
         {/* Right gradient fade */}
         <div className="absolute right-0 top-0 bottom-0 w-24 md:w-32 bg-gradient-to-l from-ivory to-transparent z-10 pointer-events-none" />
 
-        {/* Scrolling content */}
+        {/* Scrolling logos */}
         <motion.div
-          className="flex gap-8 md:gap-12 lg:gap-16 items-center whitespace-nowrap"
+          className="flex gap-20 md:gap-32 items-center"
           animate={{
-            x: isPaused ? 0 : [0, -1920],
+            x: isPaused ? 0 : [0, -1600],
           }}
           transition={{
-            duration: 40,
+            duration: 25,
             repeat: Infinity,
             ease: 'linear',
           }}
           style={{ willChange: 'transform' }}
         >
-          {/* Duplicate items twice for seamless loop */}
-          {[...BRANDS, ...BRANDS].map((brand, index) => (
-            <div key={`${brand}-${index}`} className="flex items-center gap-4">
-              <span className="text-xl md:text-2xl lg:text-3xl font-semibold text-gray/40 transition-colors duration-300 hover:text-pinterest-red cursor-default">
-                {brand}
-              </span>
-              {index < BRANDS.length * 2 - 1 && (
-                <span className="text-gray/30 text-xl">•</span>
-              )}
+          {repeatedLogos.map((brand, index) => (
+            <div key={`${brand.name}-${index}`} className="flex-shrink-0">
+              <div className="relative h-16 w-32 md:h-20 md:w-40 lg:h-24 lg:w-48">
+                <Image
+                  src={brand.logo}
+                  alt={`${brand.name} logo`}
+                  fill
+                  className="object-contain opacity-70 hover:opacity-100 transition-opacity duration-300"
+                  sizes="(max-width: 768px) 128px, (max-width: 1024px) 160px, 192px"
+                  loading="lazy"
+                />
+              </div>
             </div>
           ))}
         </motion.div>
