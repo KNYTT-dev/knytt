@@ -7,7 +7,7 @@ import Image from 'next/image';
 // Single brand - Faherty
 const BRAND = {
   name: 'Faherty',
-  logo: '/logos/brands/faherty.svg', // Change to .png if using PNG
+  logo: '/logos/brands/faherty.jpg',
 };
 
 export function BrandMarquee() {
