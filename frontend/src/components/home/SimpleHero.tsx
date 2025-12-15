@@ -25,7 +25,7 @@ export function SimpleHero() {
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#8a94ff]/10 rounded-full border border-[#8a94ff]/20 mb-6">
             <Sparkles className="w-4 h-4 text-[#8a94ff]" />
             <span className="text-sm text-charcoal font-medium">
-              AI-Powered Product Discovery
+              AI-Powered Apparel Discovery
             </span>
           </div>
 
@@ -38,7 +38,7 @@ export function SimpleHero() {
 
           {/* Subheading */}
           <p className="text-xl md:text-2xl text-gray max-w-2xl mx-auto leading-relaxed">
-            Discover products you'll love from thousands of brands, all in one place. 
+            Discover apparel you'll love from thousands of brands, all in one place.
             Powered by AI that learns your unique style.
           </p>
 
