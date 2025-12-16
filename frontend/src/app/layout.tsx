@@ -19,6 +19,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Knytt - AI-Powered Product Discovery",
   description: "Discover products tailored to your unique style with AI-powered recommendations",
+  icons: {
+    icon: "/knytt-logo-circle.png",
+  },
 };
 
 export default function RootLayout({
