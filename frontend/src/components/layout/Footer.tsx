@@ -112,7 +112,7 @@ export function Footer() {
                 <Twitter className="w-5 h-5" />
               </a>
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/shopknytt/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-ivory/10 hover:bg-ivory/20 rounded-full transition-colors"
