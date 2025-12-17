@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { ProductResult } from "@/types/api";
-import { Heart, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, ShoppingCart } from "lucide-react";
 import { useTrackInteraction } from "@/lib/queries/feedback";
 import { InteractionType } from "@/types/enums";
 import Link from "next/link";
@@ -29,7 +29,7 @@ function CarouselCard({ product, userId, context, onLike, onAddToCart, onClick }
     <Link
       href={`/products/${product.product_id}`}
       onClick={() => onClick(product.product_id)}
-      className="flex-none w-64 group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
+      className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
     >
       {/* Image */}
       <div className="relative aspect-[3/4] overflow-hidden bg-blush">
@@ -117,41 +117,7 @@ export function RecommendationCarousel({
   context = "recommendation",
   isLoading = false,
 }: RecommendationCarouselProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
   const feedbackMutation = useTrackInteraction();
-
-  // Check scroll position
-  const updateScrollButtons = () => {
-    if (!scrollContainerRef.current) return;
-
-    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-    setCanScrollLeft(scrollLeft > 0);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-  };
-
-  useEffect(() => {
-    updateScrollButtons();
-    window.addEventListener("resize", updateScrollButtons);
-    return () => window.removeEventListener("resize", updateScrollButtons);
-  }, [products]);
-
-  const scroll = (direction: "left" | "right") => {
-    if (!scrollContainerRef.current) return;
-
-    const scrollAmount = scrollContainerRef.current.clientWidth * 0.8;
-    const newScrollPosition =
-      scrollContainerRef.current.scrollLeft +
-      (direction === "left" ? -scrollAmount : scrollAmount);
-
-    scrollContainerRef.current.scrollTo({
-      left: newScrollPosition,
-      behavior: "smooth",
-    });
-
-    setTimeout(updateScrollButtons, 300);
-  };
 
   const handleLike = (productId: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -191,11 +157,11 @@ export function RecommendationCarousel({
     return (
       <div className="mb-12">
         <h2 className="text-2xl font-bold text-evergreen mb-6">{title}</h2>
-        <div className="flex gap-4 overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="flex-none w-64 h-96 bg-blush rounded-2xl animate-pulse"
+              className="w-full h-96 bg-blush rounded-2xl animate-pulse"
             />
           ))}
         </div>
@@ -211,38 +177,12 @@ export function RecommendationCarousel({
   }
 
   return (
-    <div className="mb-12 relative">
+    <div className="mb-12">
       {/* Title */}
       <h2 className="text-2xl font-bold text-evergreen mb-6">{title}</h2>
 
-      {/* Scroll Buttons */}
-      {canScrollLeft && (
-        <button
-          onClick={() => scroll("left")}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all"
-          aria-label="Scroll left"
-        >
-          <ChevronLeft className="w-6 h-6 text-evergreen" />
-        </button>
-      )}
-
-      {canScrollRight && (
-        <button
-          onClick={() => scroll("right")}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all"
-          aria-label="Scroll right"
-        >
-          <ChevronRight className="w-6 h-6 text-evergreen" />
-        </button>
-      )}
-
       {/* Products Container */}
-      <div
-        ref={scrollContainerRef}
-        onScroll={updateScrollButtons}
-        className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {validProducts.map((product) => (
           <CarouselCard
             key={product.product_id}
@@ -255,13 +195,6 @@ export function RecommendationCarousel({
           />
         ))}
       </div>
-
-      {/* Hide scrollbar */}
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </div>
   );
 }
