@@ -13,6 +13,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const logoutMutation = useLogout();
@@ -47,6 +48,13 @@ export function Header() {
     };
   }, [showMobileMenu]);
 
+  // Handle scroll for frosted glass effect
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -64,7 +72,11 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-[var(--z-sticky)] glass border-b border-light-gray">
+    <header className={`sticky top-0 z-[var(--z-sticky)] transition-all duration-300 ${
+      isScrolled
+        ? 'bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm'
+        : 'bg-transparent border-b border-transparent'
+    }`}>
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
           {/* Mobile Menu Button */}
@@ -134,13 +146,13 @@ export function Header() {
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="flex-1 max-w-2xl hidden lg:block">
             <div className="relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray group-focus-within:text-pinterest-red transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#8a94ff] transition-colors" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for products..."
-                className="w-full pl-12 pr-4 py-3 bg-white border-2 border-light-gray rounded-full focus:outline-none focus:ring-4 focus:ring-pinterest-red/20 focus:border-pinterest-red transition-all duration-[var(--duration-fast)] shadow-sm focus:shadow-md"
+                className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-full border-none placeholder:text-gray-400 text-charcoal focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#8a94ff]/30 transition-all duration-200"
               />
             </div>
           </form>
@@ -260,7 +272,7 @@ export function Header() {
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-2 text-sm font-medium bg-pinterest-red text-white rounded-full hover:bg-dark-red transition-colors"
+                  className="px-5 py-2.5 bg-gray-900 text-white rounded-full font-medium hover:bg-black transition-all hover:scale-105 active:scale-95"
                 >
                   Sign Up
                 </Link>
@@ -352,7 +364,7 @@ export function Header() {
                   <Link
                     href="/register"
                     onClick={() => setShowMobileMenu(false)}
-                    className="px-4 py-3 text-lg font-medium bg-pinterest-red text-white rounded-lg hover:bg-dark-red transition-all active:scale-95 text-center"
+                    className="px-4 py-3 text-lg font-medium bg-gray-900 text-white rounded-lg hover:bg-black transition-all hover:scale-105 active:scale-95 text-center"
                   >
                     Sign Up
                   </Link>
