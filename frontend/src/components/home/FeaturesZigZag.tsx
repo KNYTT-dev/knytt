@@ -143,13 +143,244 @@ function FeedMockup() {
   );
 }
 
+// Discover Mockup Component
+function DiscoverMockup() {
+  const categories = ["Women", "Men", "Accessories", "Home"];
+  const products = [
+    {
+      image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=400&fit=crop&q=80",
+      brand: "Zara",
+      name: "Leather Jacket",
+      price: "$199"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&h=400&fit=crop&q=80",
+      brand: "Nike",
+      name: "Running Shoes",
+      price: "$129"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1584670747114-a45c5c49fc8c?w=300&h=400&fit=crop&q=80",
+      brand: "Rebecca Minkoff",
+      name: "Crossbody Bag",
+      price: "$158"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=300&h=400&fit=crop&q=80",
+      brand: "H&M",
+      name: "Wool Sweater",
+      price: "$49"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&h=400&fit=crop&q=80",
+      brand: "Adidas",
+      name: "Sneakers",
+      price: "$95"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1624623278313-a930126a11c3?w=300&h=400&fit=crop&q=80",
+      brand: "West Elm",
+      name: "Throw Blanket",
+      price: "$59"
+    }
+  ];
+
+  return (
+    <div className="w-full max-w-md">
+      <div className="transform rotate-[1deg]">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden relative">
+          {/* Header with Search */}
+          <div className="bg-gradient-to-r from-[#8a94ff]/5 to-[#6a7ae0]/5 px-4 py-3 border-b border-gray-100">
+            <h4 className="text-sm font-semibold text-[#111111] mb-2">Discover</h4>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search brands & products..."
+                className="w-full px-3 py-1.5 text-[10px] bg-white border border-gray-200 rounded-full focus:outline-none focus:border-[#8a94ff]/30"
+                readOnly
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Category Pills */}
+          <div className="px-4 py-3 border-b border-gray-100">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+              {categories.map((cat, idx) => (
+                <button
+                  key={cat}
+                  className={`px-3 py-1 text-[10px] font-medium rounded-full whitespace-nowrap ${
+                    idx === 0
+                      ? 'bg-[#8a94ff] text-white'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Product Grid */}
+          <div className="p-4">
+            <div className="grid grid-cols-2 gap-3">
+              {products.map((product, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white rounded-lg overflow-hidden border border-gray-100"
+                >
+                  <div className="relative aspect-[3/4] bg-gray-100">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://picsum.photos/seed/discover-${idx}/300/400`;
+                      }}
+                    />
+                  </div>
+                  <div className="p-2">
+                    <p className="text-[9px] text-[#717171] uppercase tracking-wide font-medium">
+                      {product.brand}
+                    </p>
+                    <p className="text-xs text-[#111111] font-medium mt-0.5 line-clamp-1">
+                      {product.name}
+                    </p>
+                    <p className="text-xs text-[#111111] font-semibold mt-1">
+                      {product.price}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Fade overlay */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Collections Mockup Component
+function CollectionsMockup() {
+  const collections = [
+    {
+      name: "Summer Essentials",
+      count: 12,
+      images: [
+        "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=200&h=200&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=200&h=200&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200&h=200&fit=crop&q=80"
+      ]
+    },
+    {
+      name: "Work Wardrobe",
+      count: 8,
+      images: [
+        "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=200&h=200&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=200&h=200&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200&h=200&fit=crop&q=80"
+      ]
+    },
+    {
+      name: "Wishlist",
+      count: 24,
+      images: [
+        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=200&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=200&h=200&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=200&h=200&fit=crop&q=80"
+      ]
+    }
+  ];
+
+  return (
+    <div className="w-full max-w-md">
+      <div className="transform rotate-[-1deg]">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden relative">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#8a94ff]/5 to-[#6a7ae0]/5 px-4 py-3 border-b border-gray-100">
+            <h4 className="text-sm font-semibold text-[#111111]">My Collections</h4>
+            <p className="text-[10px] text-[#717171] mt-0.5">
+              {collections.reduce((sum, c) => sum + c.count, 0)} items saved
+            </p>
+          </div>
+
+          {/* Collections */}
+          <div className="p-4 space-y-3">
+            {collections.map((collection, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-lg border border-gray-100 overflow-hidden hover:border-[#8a94ff]/30 transition-colors p-3"
+              >
+                <div className="flex items-center gap-3">
+                  {/* Image Stack */}
+                  <div className="flex -space-x-2">
+                    {collection.images.slice(0, 3).map((img, imgIdx) => (
+                      <div
+                        key={imgIdx}
+                        className="w-12 h-12 rounded-lg overflow-hidden border-2 border-white shadow-sm"
+                        style={{ zIndex: 3 - imgIdx }}
+                      >
+                        <img
+                          src={img}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = `https://picsum.photos/seed/collection-${idx}-${imgIdx}/200/200`;
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Collection Info */}
+                  <div className="flex-1">
+                    <h5 className="text-xs font-semibold text-[#111111]">
+                      {collection.name}
+                    </h5>
+                    <div className="flex items-center gap-1 mt-1">
+                      <Heart className="w-3 h-3 text-[#8a94ff] fill-[#8a94ff]" />
+                      <span className="text-[10px] text-[#717171]">
+                        {collection.count} items
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Arrow */}
+                  <div>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Fade overlay */}
+          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function FeaturesZigZag() {
   return (
     <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <div className="space-y-24">
           {features.map((feature, index) => {
-            const Icon = feature.icon;
             const isEven = index % 2 === 0;
 
             return (
@@ -167,28 +398,10 @@ export function FeaturesZigZag() {
                 <div className="flex-1 flex justify-center">
                   {index === 0 ? (
                     <FeedMockup />
+                  ) : index === 1 ? (
+                    <DiscoverMockup />
                   ) : (
-                    <div
-                      className={`relative w-full max-w-md aspect-square rounded-3xl ${feature.bgColor} flex items-center justify-center overflow-hidden shadow-2xl`}
-                    >
-                      {/* Decorative gradient circles */}
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-10`}
-                      />
-                      <div
-                        className={`absolute top-10 right-10 w-32 h-32 rounded-full bg-gradient-to-br ${feature.gradient} opacity-20 blur-2xl`}
-                      />
-                      <div
-                        className={`absolute bottom-10 left-10 w-40 h-40 rounded-full bg-gradient-to-br ${feature.gradient} opacity-20 blur-3xl`}
-                      />
-
-                      {/* Icon */}
-                      <div
-                        className={`relative w-32 h-32 rounded-full bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-xl`}
-                      >
-                        <Icon className="w-16 h-16 text-white" strokeWidth={1.5} />
-                      </div>
-                    </div>
+                    <CollectionsMockup />
                   )}
                 </div>
 
