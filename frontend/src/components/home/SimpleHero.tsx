@@ -183,6 +183,34 @@ export function SimpleHero() {
             ))}
           </div>
 
+          {/* Mobile Product Preview - Visible only on mobile */}
+          <div className="flex md:hidden gap-3 overflow-x-auto scrollbar-hide px-4 my-8 -mx-4 snap-x snap-mandatory">
+            {[
+              "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=200",
+              "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=200",
+              "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=200",
+              "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200",
+              "https://images.unsplash.com/photo-1445205170230-053b83016050?w=200",
+              "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200"
+            ].map((url, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.1, duration: 0.4 }}
+                className="relative w-20 h-28 flex-shrink-0 rounded-xl overflow-hidden shadow-md snap-start first:ml-4 last:mr-4"
+              >
+                <Image
+                  src={url}
+                  alt="Fashion item"
+                  fill
+                  className="object-cover brightness-95 saturate-90"
+                  unoptimized
+                />
+              </motion.div>
+            ))}
+          </div>
+
           {/* CTA Button */}
           <Link
             href="/register"

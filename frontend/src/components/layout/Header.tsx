@@ -6,6 +6,7 @@ import { Search, Heart, ShoppingBag, User, LogOut, Settings, History, Sparkles, 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useLogout } from "@/lib/queries/auth";
+import { useFavorites } from "@/lib/queries/user";
 import { useCartStore } from "@/lib/stores/cartStore";
 import Tooltip from "@/components/ui/Tooltip";
 
@@ -18,6 +19,11 @@ export function Header() {
   const { user, isAuthenticated } = useAuth();
   const logoutMutation = useLogout();
   const cartItemCount = useCartStore((state) => state.getItemCount());
+
+  // Get favorites count
+  const { data: favoritesData } = useFavorites(user?.id);
+  const favoritesCount = favoritesData?.total || 0;
+
   const userMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -168,29 +174,40 @@ export function Header() {
             </Link>
 
             {/* Favorites */}
-            <Tooltip content="Favorites" position="bottom">
-              <Link
-                href="/favorites"
-                className="p-2.5 hover:bg-light-gray rounded-full transition-all duration-[var(--duration-fast)] group relative active:scale-95"
-              >
-                <Heart className="w-5 h-5 text-charcoal group-hover:text-pinterest-red transition-colors group-hover:scale-110" />
-              </Link>
-            </Tooltip>
+            <Link
+              href="/favorites"
+              className="flex flex-col items-center px-2 py-1 hover:bg-light-gray rounded-lg transition-all duration-[var(--duration-fast)] group"
+            >
+              <div className="relative">
+                <Heart className="w-5 h-5 text-charcoal group-hover:text-[#8a94ff] transition-colors group-hover:scale-110" />
+                {favoritesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#8a94ff] text-white text-[10px] rounded-full flex items-center justify-center font-medium shadow-sm">
+                    {favoritesCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-gray group-hover:text-[#8a94ff] mt-0.5 transition-colors">
+                Saved
+              </span>
+            </Link>
 
             {/* Cart */}
-            <Tooltip content="Shopping Cart" position="bottom">
-              <Link
-                href="/cart"
-                className="p-2.5 hover:bg-light-gray rounded-full transition-all duration-[var(--duration-fast)] group relative active:scale-95"
-              >
-                <ShoppingBag className="w-5 h-5 text-charcoal group-hover:text-pinterest-red transition-colors group-hover:scale-110" />
+            <Link
+              href="/cart"
+              className="flex flex-col items-center px-2 py-1 hover:bg-light-gray rounded-lg transition-all duration-[var(--duration-fast)] group"
+            >
+              <div className="relative">
+                <ShoppingBag className="w-5 h-5 text-charcoal group-hover:text-[#8a94ff] transition-colors group-hover:scale-110" />
                 {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-pinterest-red text-white text-xs rounded-full flex items-center justify-center font-medium shadow-md animate-scale-in">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#8a94ff] text-white text-[10px] rounded-full flex items-center justify-center font-medium shadow-sm">
                     {cartItemCount}
                   </span>
                 )}
-              </Link>
-            </Tooltip>
+              </div>
+              <span className="text-[10px] text-gray group-hover:text-[#8a94ff] mt-0.5 transition-colors">
+                Cart
+              </span>
+            </Link>
 
             {/* User Profile / Auth */}
             {isAuthenticated && user ? (
