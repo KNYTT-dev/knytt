@@ -22,3 +22,6 @@ export * from "./user";
 
 // Cart types
 export * from "./cart";
+
+// Outfit types
+export * from "./outfit";
