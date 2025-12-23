@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { OutfitSlotType, OUTFIT_SLOT_CONFIG } from "@/types/outfit";
 import { ProductResult } from "@/types/product";
 import { useAuth } from "@/lib/queries/auth";
-import { useDiscoverProducts } from "@/lib/queries/discover";
+import { useDiscover } from "@/lib/queries/discover";
 import { ProductCard } from "@/components/products/ProductCard";
 import { useOutfitStore } from "@/lib/stores/outfitStore";
 import { useToast } from "@/components/ui/Toast";
@@ -28,8 +28,8 @@ export function OutfitItemSelector({
   const addItemToSlot = useOutfitStore((state) => state.addItemToSlot);
 
   // Fetch products (using discover endpoint)
-  const { data: productsData, isLoading } = useDiscoverProducts(user?.id);
-  const products = productsData?.products || [];
+  const { data: productsData, isLoading } = useDiscover({ limit: 100 });
+  const products = productsData?.results || [];
 
   // Filter products by slot's category
   const filteredProducts = slotType
