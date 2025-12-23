@@ -31,21 +31,28 @@ export function OutfitItemSelector({
   const { data: productsData, isLoading } = useDiscover({ limit: 100 });
   const products = productsData?.results || [];
 
-  // Filter products by slot's category
+  // Filter products by slot's category and search query
   const filteredProducts = slotType
     ? products.filter((product) => {
+        // Search filter - search against title, brand, and description
+        const matchesSearch = searchQuery
+          ? product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            product.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            product.description?.toLowerCase().includes(searchQuery.toLowerCase())
+          : true;
+
+        // If user is searching, show all matching products regardless of category
+        if (searchQuery && matchesSearch) {
+          return true;
+        }
+
+        // If no search, apply category filter
         const categoryFilter = OUTFIT_SLOT_CONFIG[slotType].category_filter;
         const matchesCategory = categoryFilter.some(
           (cat) =>
-            product.category_name?.includes(cat) ||
-            product.fashion_category?.includes(cat)
+            product.category_name?.toLowerCase().includes(cat.toLowerCase()) ||
+            product.fashion_category?.toLowerCase().includes(cat.toLowerCase())
         );
-
-        // Also filter by search query if present
-        const matchesSearch = searchQuery
-          ? product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            product.brand?.toLowerCase().includes(searchQuery.toLowerCase())
-          : true;
 
         return matchesCategory && matchesSearch;
       })
