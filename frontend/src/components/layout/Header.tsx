@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Search, Heart, ShoppingBag, User, LogOut, Settings, History, Sparkles, Menu, X } from "lucide-react";
+import { Search, Heart, ShoppingBag, User, LogOut, Settings, History, Sparkles, Menu, X, Shirt } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useLogout } from "@/lib/queries/auth";
 import { useFavorites } from "@/lib/queries/user";
 import { useCartStore } from "@/lib/stores/cartStore";
+import { useOutfitStore } from "@/lib/stores/outfitStore";
 import Tooltip from "@/components/ui/Tooltip";
 
 export function Header() {
@@ -19,6 +20,7 @@ export function Header() {
   const { user, isAuthenticated } = useAuth();
   const logoutMutation = useLogout();
   const cartItemCount = useCartStore((state) => state.getItemCount());
+  const outfitFilledCount = useOutfitStore((state) => state.getFilledCount());
 
   // Get favorites count
   const { data: favoritesData } = useFavorites(user?.id);
@@ -191,6 +193,24 @@ export function Header() {
               </span>
             </Link>
 
+            {/* Outfits */}
+            <Link
+              href="/outfit-builder"
+              className="flex flex-col items-center px-2 py-1 hover:bg-light-gray rounded-lg transition-all duration-[var(--duration-fast)] group"
+            >
+              <div className="relative">
+                <Shirt className="w-5 h-5 text-charcoal group-hover:text-[#8a94ff] transition-colors group-hover:scale-110" />
+                {outfitFilledCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#8a94ff] text-white text-[10px] rounded-full flex items-center justify-center font-medium shadow-sm">
+                    {outfitFilledCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-gray group-hover:text-[#8a94ff] mt-0.5 transition-colors">
+                Outfits
+              </span>
+            </Link>
+
             {/* Cart */}
             <Link
               href="/cart"
@@ -341,6 +361,14 @@ export function Header() {
                   >
                     <Heart className="w-5 h-5 text-pinterest-red" />
                     Favorites
+                  </Link>
+                  <Link
+                    href="/outfit-builder"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="px-4 py-3 text-lg font-medium text-charcoal hover:bg-light-gray rounded-lg transition-all active:scale-95 flex items-center gap-3"
+                  >
+                    <Shirt className="w-5 h-5 text-[#8a94ff]" />
+                    Outfit Builder
                   </Link>
                   <Link
                     href="/history"
