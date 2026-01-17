@@ -5,12 +5,58 @@ This document provides a comprehensive summary of the Knytt deployment infrastru
 ## Architecture Overview
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Cloudflare    │────▶│   Google Cloud   │────▶│    Supabase     │
-│     Pages       │     │    Cloud Run     │     │   PostgreSQL    │
-│   (Frontend)    │     │    (Backend)     │     │   + Storage     │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
+                              ┌──────────────────────────────────────────────────────┐
+                              │                      GitHub                          │
+                              │  ┌────────────────────────────────────────────────┐  │
+                              │  │              GitHub Actions CI/CD              │  │
+                              │  │  • Build Docker images                         │  │
+                              │  │  • Run Terraform                               │  │
+                              │  │  • Run database migrations                     │  │
+                              │  └────────────────────────────────────────────────┘  │
+                              └───────────────┬────────────────┬─────────────────────┘
+                                              │                │
+                         ┌────────────────────┘                └────────────────────┐
+                         │                                                          │
+                         ▼                                                          ▼
+┌─────────────────────────────────────────┐              ┌─────────────────────────────────────┐
+│            Google Cloud (GCP)           │              │           Cloudflare Pages          │
+│  ┌───────────────────────────────────┐  │              │  ┌─────────────────────────────┐    │
+│  │  Artifact       Cloud Run         │  │              │  │   Next.js Frontend          │    │
+│  │  Registry  ───▶ (API + Workers)   │  │              │  │   • Static assets           │    │
+│  └───────────────────────────────────┘  │              │  │   • Preview deployments     │    │
+│  ┌───────────────────────────────────┐  │              │  └─────────────────────────────┘    │
+│  │  Secret Manager │ Cloud Storage   │  │              └─────────────────────────────────────┘
+│  │  (Credentials)  │ (ML Artifacts)  │  │                                │
+│  └───────────────────────────────────┘  │                                │
+│  ┌───────────────────────────────────┐  │                                │
+│  │  Memorystore Redis (Task Queue)   │  │                                │
+│  └───────────────────────────────────┘  │                                │
+└───────────────────┬─────────────────────┘                                │
+                    │                                                      │
+                    │         ┌────────────────────────────────────────────┘
+                    │         │
+                    ▼         ▼
+          ┌─────────────────────────────────────┐
+          │              Supabase               │
+          │  ┌─────────────────────────────┐    │
+          │  │  PostgreSQL + pgvector      │    │
+          │  │  • Database                 │    │
+          │  │  • Authentication           │    │
+          │  │  • Storage buckets          │    │
+          │  └─────────────────────────────┘    │
+          └─────────────────────────────────────┘
 ```
+
+### Deployment Flow
+
+1. **Code Push** → Developer pushes to GitHub (`main`, `staging`, or `develop`)
+2. **GitHub Actions** → Triggers CI/CD workflow (`.github/workflows/deploy.yml`)
+3. **Build** → Docker images built and pushed to GCP Artifact Registry
+4. **Infrastructure** → Terraform provisions/updates GCP resources
+5. **Deploy Backend** → Cloud Run services updated with new images
+6. **Migrate** → Supabase database migrations applied
+7. **Deploy Frontend** → Cloudflare Pages builds and deploys Next.js app
+8. **Smoke Test** → Health endpoints verified
 
 ---
 
